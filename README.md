@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src=".github/logo.png" alt="Nexora" width="110">
+
 # NexoraCLI
 
 **Terminal client for [Nexora](https://github.com/ParendumOU/Nexora)** — chat with your
