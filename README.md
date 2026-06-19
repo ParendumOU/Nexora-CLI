@@ -10,6 +10,12 @@ the network (LAN, VPN, or public).
 ![Release](https://img.shields.io/github/v/release/ParendumOU/Nexora-CLI?sort=semver)
 ![Stars](https://img.shields.io/github/stars/ParendumOU/Nexora-CLI?style=social)
 
+<br>
+
+<video src="https://github.com/ParendumOU/Nexora-CLI/releases/download/v0.2.1/NexoraLandscape.mp4" controls muted loop playsinline width="720"></video>
+
+▶ **[Watch the demo](https://nexora.parendum.com/NexoraLandscape.mp4)** · [nexora.parendum.com](https://nexora.parendum.com)
+
 </div>
 
 > Status: **full frontend parity** — auth, streaming chat, agents CRUD, providers, knowledge
@@ -110,5 +116,5 @@ make tidy build vet test
 ## Star history
 
 <a href="https://star-history.com/#ParendumOU/Nexora-CLI&Date">
-  <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=ParendumOU/Nexora-CLI&type=Date" width="640">
+  <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=ParendumOU/Nexora-CLI&type=Date&theme=dark" width="640">
 </a>
