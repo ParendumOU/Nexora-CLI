@@ -117,6 +117,10 @@ No Go toolchain needed on the host — `make` runs everything in `golang:1.23`:
 make tidy build vet test
 ```
 
+## License
+
+[MIT](LICENSE) © Parendum OÜ
+
 ## Star history
 
 <a href="https://star-history.com/#ParendumOU/Nexora-CLI&Date">
