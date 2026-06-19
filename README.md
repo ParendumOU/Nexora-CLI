@@ -12,13 +12,11 @@ the network (LAN, VPN, or public).
 ![Release](https://img.shields.io/github/v/release/ParendumOU/Nexora-CLI?sort=semver)
 ![Stars](https://img.shields.io/github/stars/ParendumOU/Nexora-CLI?style=social)
 
+**[🌐 Website](https://nexora.parendum.com) · [📖 Docs](https://docs.nexora.parendum.com) · [🧩 Marketplace](https://marketplace.nexora.parendum.com)**
+
 <br>
 
-<a href="https://nexora.parendum.com">
-  <img src="https://github.com/ParendumOU/Nexora-CLI/releases/download/v0.2.1/nexora_demo.gif" alt="Nexora demo" width="720">
-</a>
-
-▶ **[Watch the full demo at nexora.parendum.com](https://nexora.parendum.com)**
+<img src=".github/terminal-overview.png" alt="NexoraCLI" width="820">
 
 </div>
 
