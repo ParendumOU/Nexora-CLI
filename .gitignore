@@ -1,0 +1,18 @@
+# Binaries
+/bin/
+/dist/
+nexora
+nexora.exe
+*.test
+*.out
+
+# Go
+vendor/
+
+# Local config / secrets (never commit tokens)
+config.toml
+*.local.toml
+
+# OS
+.DS_Store
+Thumbs.db
