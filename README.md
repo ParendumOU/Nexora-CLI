@@ -12,9 +12,11 @@ the network (LAN, VPN, or public).
 
 <br>
 
-<video src="https://github.com/ParendumOU/Nexora-CLI/releases/download/v0.2.1/NexoraLandscape.mp4" controls muted loop playsinline width="720"></video>
+<a href="https://nexora.parendum.com">
+  <img src="https://github.com/ParendumOU/Nexora-CLI/releases/download/v0.2.1/nexora_demo.gif" alt="Nexora demo" width="720">
+</a>
 
-▶ **[Watch the demo](https://nexora.parendum.com/NexoraLandscape.mp4)** · [nexora.parendum.com](https://nexora.parendum.com)
+▶ **[Watch the full demo at nexora.parendum.com](https://nexora.parendum.com)**
 
 </div>
 
