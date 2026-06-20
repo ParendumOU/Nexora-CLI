@@ -121,10 +121,10 @@ make tidy build vet test
 
 ## Star history
 
-<a href="https://star-history.com/#ParendumOU/Nexora-CLI&Date">
+<a href="https://www.star-history.com/?repos=ParendumOU%2FNexora-CLI&type=date&legend=top-left">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=ParendumOU/Nexora-CLI&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=ParendumOU/Nexora-CLI&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=ParendumOU/Nexora-CLI&type=Date&theme=dark" width="100%" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=ParendumOU/Nexora-CLI&type=date&theme=dark&legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=ParendumOU/Nexora-CLI&type=date&legend=top-left" />
+    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=ParendumOU/Nexora-CLI&type=date&legend=top-left" />
   </picture>
 </a>
