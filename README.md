@@ -18,11 +18,9 @@ the network (LAN, VPN, or public).
 ![Bubble Tea](https://img.shields.io/badge/TUI-Bubble%20Tea-FF75B7?style=flat-square)
 ![Platforms](https://img.shields.io/badge/platforms-linux%20·%20macOS%20·%20windows-6366f1?style=flat-square)
 
+<video src="https://raw.githubusercontent.com/ParendumOU/Nexora-CLI/main/.github/nexora-demo.mp4" controls muted width="720"></video>
+
 **[🌐 Website](https://nexora.parendum.com) · [📖 Docs](https://docs.nexora.parendum.com) · [🧩 Marketplace](https://marketplace.nexora.parendum.com)**
-
-<br>
-
-<img src=".github/terminal-demo.gif" alt="NexoraCLI streaming a local-exec chat" width="820">
 
 </div>
 
