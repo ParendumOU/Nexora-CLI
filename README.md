@@ -9,20 +9,33 @@ agents, watch tasks stream live, and manage sessions from the terminal. Go + Bub
 Single static binary, zero runtime deps; connects to any Nexora / NexoraCloud instance over
 the network (LAN, VPN, or public).
 
-![Release](https://img.shields.io/github/v/release/ParendumOU/Nexora-CLI?sort=semver)
+![Release](https://img.shields.io/github/v/release/ParendumOU/Nexora-CLI?sort=semver&color=8b5cf6&style=flat-square)
+![License](https://img.shields.io/github/license/ParendumOU/Nexora-CLI?color=6366f1&style=flat-square)
+![PRs welcome](https://img.shields.io/badge/PRs-welcome-6366f1?style=flat-square)
 ![Stars](https://img.shields.io/github/stars/ParendumOU/Nexora-CLI?style=social)
+
+![Go](https://img.shields.io/badge/Go-1.23-00ADD8?logo=go&logoColor=white&style=flat-square)
+![Bubble Tea](https://img.shields.io/badge/TUI-Bubble%20Tea-FF75B7?style=flat-square)
+![Platforms](https://img.shields.io/badge/platforms-linux%20·%20macOS%20·%20windows-6366f1?style=flat-square)
 
 **[🌐 Website](https://nexora.parendum.com) · [📖 Docs](https://docs.nexora.parendum.com) · [🧩 Marketplace](https://marketplace.nexora.parendum.com)**
 
 <br>
 
-<img src=".github/terminal-overview.png" alt="NexoraCLI" width="820">
+<img src=".github/terminal-demo.gif" alt="NexoraCLI streaming a local-exec chat" width="820">
 
 </div>
 
 > Status: **full frontend parity** — auth, streaming chat, agents CRUD, providers, knowledge
 > bases, board/kanban, issues, schedules, marketplace, settings, and local tool execution on
 > the CLI host. See the Roadmap below.
+
+### Why use it?
+
+- **🚀 One static binary, zero deps.** Drop `nexora` on your `PATH` — no Node, no Python, no Docker.
+- **⌨️ The whole platform, in your terminal.** Everything the web UI does, keyboard-driven.
+- **🖥️ Local tool execution.** Let agents run shell/file tools on *your* machine (opt-in, with consent prompts).
+- **🔗 Connects to any instance** over LAN, VPN, or public — switch between many with `nexora instance use`.
 
 ## Install
 
@@ -115,9 +128,19 @@ No Go toolchain needed on the host — `make` runs everything in `golang:1.23`:
 make tidy build vet test
 ```
 
+## Contributing
+
+Issues and PRs welcome — see [`CONTRIBUTING.md`](CONTRIBUTING.md) and
+[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md). Security reports: [`SECURITY.md`](SECURITY.md).
+
 ## License
 
 [MIT](LICENSE) © Parendum OÜ
+
+## ⭐ Found this useful?
+
+Drop a star — it helps other terminal-dwellers find Nexora. New to the platform? Start at
+**[nexora.parendum.com](https://nexora.parendum.com)**.
 
 ## Star history
 
