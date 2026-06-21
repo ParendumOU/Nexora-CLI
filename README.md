@@ -18,7 +18,9 @@ the network (LAN, VPN, or public).
 ![Bubble Tea](https://img.shields.io/badge/TUI-Bubble%20Tea-FF75B7?style=flat-square)
 ![Platforms](https://img.shields.io/badge/platforms-linux%20·%20macOS%20·%20windows-6366f1?style=flat-square)
 
-<video src="https://nexora.parendum.com/NexoraLandscape.mp4" controls muted loop playsinline width="720"></video>
+<a href="https://nexora.parendum.com">
+  <img src=".github/nexora-demo.gif" alt="Nexora — AI-agent orchestration platform (click to watch the full demo)" width="760">
+</a>
 
 **[🌐 Website](https://nexora.parendum.com) · [📖 Docs](https://docs.nexora.parendum.com) · [🧩 Marketplace](https://marketplace.nexora.parendum.com)**
 
