@@ -139,6 +139,7 @@ type model struct {
 	activeAgentID  string // optional — empty = general/agentless chat
 	activeModel    string // per-turn model override (set via /model)
 	activeChainID  string // per-turn provider chain (set via /chain)
+	activeMode     string // reasoning mode: flash (default) | think | deep (ctrl+r cycles)
 	messages       []api.Message
 	renderedBlocks []string // cached rendered (styled) display blocks
 	blockTexts     []string // plain text per block, parallel to renderedBlocks (for yank)
@@ -269,6 +270,7 @@ type model struct {
 // Run starts the TUI against the given instance client.
 func Run(client *api.Client, instName, version string, localExec, yolo bool, uiMode string, saveLocal func(le, yo bool), saveUI func(string)) error {
 	m := newModel(client, instName, version)
+	m.activeMode = "flash"
 	m.localExec = localExec
 	m.localYolo = yolo && localExec
 	m.saveLocal = saveLocal
@@ -783,6 +785,7 @@ func (m *model) sendTurn(content string) tea.Cmd {
 		ChainID:         m.activeChainID,
 		EnableAgent:     m.activeAgentID != "",
 		ClientMessageID: cid,
+		Mode:            m.activeMode,
 		LocalExec:       m.localExec,
 		Cwd:             m.localCwd,
 		ClientOS:        runtime.GOOS,
@@ -1434,10 +1437,30 @@ func (m *model) renderHeader() string {
 	return row + "\n" + rule
 }
 
+// modeLabel renders the reasoning mode as a short chip (ctrl+r cycles flash→think→deep).
+func modeLabel(mode string) string {
+	switch mode {
+	case "think":
+		return "◈ Think"
+	case "deep":
+		return "✦ Deep"
+	default:
+		return "⚡ Flash"
+	}
+}
+
 func (m *model) renderFooter() string {
 	t := m.theme
 	// connection moved to the header dot — footer just shows local-exec chips + status/help.
 	left := ""
+	// Reasoning-mode chip (chat only); think/deep highlighted, flash dim. ctrl+r cycles.
+	if m.activeTab == tabChat {
+		mc := lipgloss.NewStyle().Foreground(t.Subtle)
+		if m.activeMode == "think" || m.activeMode == "deep" {
+			mc = lipgloss.NewStyle().Foreground(t.Accent).Bold(true)
+		}
+		left += mc.Render(" " + modeLabel(m.activeMode))
+	}
 	if m.localExec {
 		left += lipgloss.NewStyle().Foreground(t.Accent2).Bold(true).Render(" LOCAL")
 		if m.localYolo {
@@ -1464,7 +1487,7 @@ func (m *model) contextHelp() string {
 		if m.sidebarOpen {
 			return "ctrl+b close panel · ctrl+o switch panel · ctrl+g sub-chats · / commands"
 		}
-		return "/ commands · ctrl+b panel · ctrl+g sub-chats · wheel scroll · shift+drag select"
+		return "/ commands · ctrl+b panel · ctrl+r mode · ctrl+g sub-chats · wheel scroll"
 	case tabAgents:
 		return "[n]ew [e]dit [d]el · [s]kills [o]tools [M]cps [p]ersona · [tab] [ctrl+k]"
 	case tabProviders:

@@ -111,6 +111,19 @@ func (m *model) updateChat(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.localExpand = !m.localExpand
 			m.rebuildBlocks()
 			return m, nil
+		case "ctrl+r":
+			// cycle reasoning mode: flash → think → deep → flash. Sent as `mode` on the
+			// next turn; drives provider-native reasoning server-side.
+			switch m.activeMode {
+			case "think":
+				m.activeMode = "deep"
+			case "deep":
+				m.activeMode = "flash"
+			default:
+				m.activeMode = "think"
+			}
+			m.status = "mode: " + modeLabel(m.activeMode)
+			return m, nil
 		case "enter":
 			content := strings.TrimSpace(m.input.Value())
 			// Empty input + the Agents panel → enter loads the highlighted chat.
@@ -450,8 +463,14 @@ func (m *model) handleFrame(f ws.Frame) (tea.Model, tea.Cmd) {
 		m.renderTranscript()
 
 	case "stream_end":
+		// Backend content is AUTHORITATIVE: it equals the saved message (tool/file
+		// fences stripped, <think> kept). Only fall back to the raw streamed buffer
+		// when the frame OMITS the field entirely — an explicit "" is an
+		// intentionally-empty (tool-only / file-delivery) turn and must NOT resurrect
+		// the raw stream, else the live view shows JSON/CSS that vanishes on reload
+		// (the live-vs-refresh mismatch fixed on the web).
 		final := f.Content
-		if final == "" {
+		if !f.HasContent {
 			final = m.assistantBuf
 		}
 		name := ""

@@ -42,3 +42,28 @@ func TestCleanContentStripsFinalAndThinking(t *testing.T) {
 		t.Errorf("expected 1 reasoning block, got %d", len(reasoning))
 	}
 }
+
+// Live streaming: an unclosed <think> (closing tag not arrived yet) must be pulled
+// out as reasoning and kept out of the visible body — "watch it think".
+func TestCleanContentHandlesOpenThinking(t *testing.T) {
+	in := "<think>step 1\nstep 2 in progress"
+	got, reasoning := cleanContent(in)
+	if got != "" {
+		t.Errorf("open think leaked into body: %q", got)
+	}
+	if len(reasoning) != 1 || reasoning[0] == "" {
+		t.Errorf("expected 1 live reasoning block, got %v", reasoning)
+	}
+}
+
+func TestCleanContentOpenThinkingAfterClosedBlock(t *testing.T) {
+	// a finished thought, then the answer starts, then a new open thought streams in
+	in := "<think>done thinking</think>Here is the answer.<think>now reconsider"
+	got, reasoning := cleanContent(in)
+	if got != "Here is the answer." {
+		t.Errorf("got %q", got)
+	}
+	if len(reasoning) != 2 {
+		t.Errorf("expected 2 reasoning blocks (closed + open), got %d", len(reasoning))
+	}
+}

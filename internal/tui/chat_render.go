@@ -15,6 +15,7 @@ import (
 
 var (
 	reThinking    = regexp.MustCompile(`(?is)<(thinking|think)>(.*?)</(thinking|think)>`)
+	reThinkingOpen = regexp.MustCompile(`(?is)<(?:thinking|think)>`) // last unclosed open tag (live)
 	reProposal    = regexp.MustCompile(`(?is)<proposal>.*?</proposal>`)
 	reInternal    = regexp.MustCompile(`(?is)<\s*(analysis_thought|internal_thought|scratchpad)\s*>.*?<\s*/\s*(analysis_thought|internal_thought|scratchpad)\s*>`)
 	reFinal       = regexp.MustCompile(`(?i)<\s*final\s*/?\s*>`)
@@ -47,6 +48,17 @@ func cleanContent(s string) (text string, reasoning []string) {
 		}
 	}
 	s = reThinking.ReplaceAllString(s, "")
+	// Live: a still-OPEN <think>/<thinking> whose closing tag hasn't streamed yet.
+	// reThinking only matches closed blocks, so during streaming surface the open
+	// block's current text as reasoning and keep it out of the body ("watch it
+	// think"); a finished message always has the closing tag (handled above).
+	if m := reThinkingOpen.FindStringIndex(s); m != nil {
+		live := strings.TrimSpace(s[m[1]:])
+		if live != "" {
+			reasoning = append(reasoning, live)
+		}
+		s = s[:m[0]]
+	}
 	s = reProposal.ReplaceAllString(s, "")
 	s = reInternal.ReplaceAllString(s, "")
 	s = reSysObs.ReplaceAllString(s, "")

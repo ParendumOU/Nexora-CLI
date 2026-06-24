@@ -47,6 +47,25 @@ type Frame struct {
 	StepName  string `json:"step_name"`
 	StepLabel string `json:"step_label"`
 	Result    string `json:"result"`
+
+	// HasContent distinguishes an explicit "content":"" (authoritative empty turn)
+	// from the field being absent. Set by UnmarshalJSON; not a wire field.
+	HasContent bool `json:"-"`
+}
+
+// UnmarshalJSON decodes a Frame and records whether the "content" key was present,
+// so stream_end can trust an explicit empty content instead of falling back to the
+// raw streamed buffer.
+func (f *Frame) UnmarshalJSON(data []byte) error {
+	type alias Frame // avoid recursion
+	if err := json.Unmarshal(data, (*alias)(f)); err != nil {
+		return err
+	}
+	var probe map[string]json.RawMessage
+	if err := json.Unmarshal(data, &probe); err == nil {
+		_, f.HasContent = probe["content"]
+	}
+	return nil
 }
 
 // outbound is a client→server message.
@@ -58,6 +77,9 @@ type outbound struct {
 	ProviderChainID string `json:"provider_chain_id,omitempty"`
 	EnableAgent     bool   `json:"enable_agent"`
 	ClientMessageID string `json:"client_message_id,omitempty"`
+	// reasoning mode: flash (default) | think | deep — drives provider-native
+	// reasoning server-side (see core providers/reasoning.py).
+	Mode string `json:"mode,omitempty"`
 	// local execution: when true the backend proxies filesystem/shell tools to this host.
 	LocalExec bool   `json:"local_exec,omitempty"`
 	Cwd       string `json:"cwd,omitempty"`
@@ -71,6 +93,7 @@ type SendOpts struct {
 	ChainID         string
 	EnableAgent     bool
 	ClientMessageID string
+	Mode            string
 	LocalExec       bool
 	Cwd             string
 	ClientOS        string
@@ -116,6 +139,7 @@ func (c *Client) Send(content string, o SendOpts) error {
 		Type: "message", Content: content,
 		AgentID: o.AgentID, ModelName: o.ModelName, ProviderChainID: o.ChainID,
 		EnableAgent: o.EnableAgent, ClientMessageID: o.ClientMessageID,
+		Mode:      o.Mode,
 		LocalExec: o.LocalExec, Cwd: o.Cwd, ClientOS: o.ClientOS,
 	})
 }
