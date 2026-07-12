@@ -3,6 +3,14 @@
 All notable changes to NexoraCLI. Newest first; one `## <version>` heading per release.
 The release CI extracts the section matching the pushed tag as the GitHub Release notes.
 
+## 0.4.0
+
+- One-liner installers: install.sh (Linux/macOS) and install.ps1 (Windows) download the latest release binary and put it on PATH as nexora.
+- Install one-liners documented in the README.
+- Release binaries for linux-amd64, darwin-arm64 and windows-amd64 attached to the GitHub release.
+- Security: the chat WebSocket auth token is sent in the Authorization header instead of the URL.
+- Strip orphan closing think tags from rendered chat content.
+
 ## 0.3.0
 
 - Flash / Think / Deep reasoning mode: `ctrl+r` cycles it, a footer chip shows the
