@@ -39,6 +39,25 @@ the network (LAN, VPN, or public).
 
 ## Install
 
+### One-liner
+
+**Linux / macOS**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ParendumOU/Nexora-CLI/main/install.sh | bash
+```
+
+**Windows (PowerShell)**
+
+```powershell
+powershell -c "irm https://raw.githubusercontent.com/ParendumOU/Nexora-CLI/main/install.ps1 | iex"
+```
+
+Downloads the latest release binary for your platform and puts it on your `PATH`
+as `nexora`. Re-run it any time to update.
+
+### Manual
+
 Download a binary for your OS from the [latest release](https://github.com/ParendumOU/Nexora-CLI/releases/latest),
 put it on your `PATH` as `nexora`, or build it yourself:
 
