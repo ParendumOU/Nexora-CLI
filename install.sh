@@ -3,8 +3,11 @@
 #
 #   curl -fsSL https://raw.githubusercontent.com/ParendumOU/Nexora-CLI/main/install.sh | bash
 #
-# Downloads the latest release binary for your platform and puts it on your
-# PATH as `nexora`. No runtime dependencies. Safe to re-run (updates in place).
+# Installs the `nexora` binary and puts it on your PATH. No runtime deps. Re-run to update.
+#
+# Zero-touch join (what an admin's invite one-liner does):
+#   curl -fsSL .../install.sh | bash -s -- --join <INVITE_TOKEN> --url https://your-instance
+# Same via env: NEXORA_JOIN_TOKEN, NEXORA_URL.
 #
 # Overrides: NEXORA_CLI_VERSION (e.g. v0.19.0), NEXORA_CLI_BIN_DIR
 set -euo pipefail
@@ -12,10 +15,23 @@ set -euo pipefail
 REPO="ParendumOU/Nexora-CLI"
 API="https://api.github.com/repos/$REPO"
 
-bold() { printf '\033[1m%s\033[0m\n' "$*"; }
 info() { printf '\033[36m==>\033[0m %s\n' "$*"; }
-ok()   { printf '\033[32m ✓ \033[0m%s\n' "$*"; }
+ok()   { printf '\033[32m✓\033[0m %s\n' "$*"; }
+warn() { printf '\033[33m!\033[0m %s\n' "$*"; }
 fail() { printf '\033[31mERROR:\033[0m %s\n' "$*" >&2; exit 1; }
+
+# ── Args / env ──────────────────────────────────────────────────────────────────
+JOIN_TOKEN="${NEXORA_JOIN_TOKEN:-}"
+JOIN_URL="${NEXORA_URL:-}"
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --join)   JOIN_TOKEN="${2:-}"; shift 2 ;;
+    --join=*) JOIN_TOKEN="${1#*=}"; shift ;;
+    --url)    JOIN_URL="${2:-}"; shift 2 ;;
+    --url=*)  JOIN_URL="${1#*=}"; shift ;;
+    *) shift ;;
+  esac
+done
 
 command -v curl >/dev/null 2>&1 || fail "curl is required."
 
@@ -33,29 +49,19 @@ case "$ARCH" in
   *) fail "Unsupported architecture: $ARCH" ;;
 esac
 
-bold ""
-bold "  NexoraCLI — terminal client for Nexora"
-bold ""
-
 # ── Latest version ────────────────────────────────────────────────────────────
 TAG="${NEXORA_CLI_VERSION:-}"
 if [ -z "$TAG" ]; then
-  info "Looking up the latest release"
   TAG="$(curl -fsSL "$API/releases/latest" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -n1)"
   [ -n "$TAG" ] || fail "Could not determine the latest release. Set NEXORA_CLI_VERSION=vX.Y.Z and re-run."
 fi
-ok "Version $TAG"
 
 # ── Download ──────────────────────────────────────────────────────────────────
 BASE="https://github.com/$REPO/releases/download/$TAG"
 TMP="$(mktemp)"
 FOUND=""
 for ASSET in "nexora-$TAG-$OS-$ARCH" "nexora-$OS-$ARCH"; do
-  info "Downloading $ASSET"
-  if curl -fsSL -o "$TMP" "$BASE/$ASSET" 2>/dev/null; then
-    FOUND="$ASSET"
-    break
-  fi
+  if curl -fsSL -o "$TMP" "$BASE/$ASSET" 2>/dev/null; then FOUND="$ASSET"; break; fi
 done
 if [ -z "$FOUND" ]; then
   rm -f "$TMP"
@@ -67,7 +73,7 @@ chmod +x "$TMP"
 # ── Install ───────────────────────────────────────────────────────────────────
 BIN_DIR="${NEXORA_CLI_BIN_DIR:-}"
 if [ -z "$BIN_DIR" ]; then
-  if [ -w /usr/local/bin ]; then
+  if [ -w /usr/local/bin ] 2>/dev/null; then
     BIN_DIR=/usr/local/bin
   elif command -v sudo >/dev/null 2>&1 && [ -e /dev/tty ]; then
     BIN_DIR=/usr/local/bin
@@ -79,23 +85,45 @@ mkdir -p "$BIN_DIR" 2>/dev/null || true
 if [ -w "$BIN_DIR" ]; then
   mv "$TMP" "$BIN_DIR/nexora"
 else
-  info "Installing to $BIN_DIR (you may be asked for your sudo password)"
   sudo mv "$TMP" "$BIN_DIR/nexora" < /dev/tty || { rm -f "$TMP"; fail "Could not write to $BIN_DIR."; }
 fi
-ok "Installed $BIN_DIR/nexora"
+ok "Installed nexora $TAG → $BIN_DIR/nexora"
 
-case ":$PATH:" in
-  *":$BIN_DIR:"*) ;;
-  *) printf '\033[33m ! \033[0m%s\n' "$BIN_DIR is not on your PATH — add it to your shell profile:"
-     echo "     export PATH=\"$BIN_DIR:\$PATH\"" ;;
-esac
+# ── PATH: add to the user's shell rc if missing ─────────────────────────────────
+ensure_on_path() {
+  case ":$PATH:" in *":$BIN_DIR:"*) return 0 ;; esac
+  local rc
+  case "$(basename "${SHELL:-sh}")" in
+    zsh)  rc="$HOME/.zshrc" ;;
+    bash) rc="$HOME/.bashrc" ;;
+    *)    rc="$HOME/.profile" ;;
+  esac
+  if ! { [ -f "$rc" ] && grep -qF "$BIN_DIR" "$rc" 2>/dev/null; }; then
+    printf '\n# Added by NexoraCLI installer\nexport PATH="%s:$PATH"\n' "$BIN_DIR" >> "$rc"
+  fi
+  export PATH="$BIN_DIR:$PATH"
+  RELOAD_RC="$rc"
+}
+RELOAD_RC=""
+ensure_on_path
 
-bold ""
-bold "  NexoraCLI installed!"
-bold ""
-echo "  Connect to your instance:"
-echo "    nexora login --url https://your-instance.example.com    # email/password"
-echo "    nexora pair  --url https://your-instance.example.com    # code from web Settings → Devices"
-echo ""
-echo "  Then run:  nexora"
-echo ""
+# ── Join (auto) or print manual next-steps ──────────────────────────────────────
+if [ -n "$JOIN_TOKEN" ] && [ -n "$JOIN_URL" ]; then
+  info "Connecting to $JOIN_URL"
+  "$BIN_DIR/nexora" join --url "$JOIN_URL" --token "$JOIN_TOKEN" \
+    || fail "Could not join. The invite may be expired or already used — ask your admin for a new one."
+  echo ""
+  ok "You're all set."
+  if [ -n "$RELOAD_RC" ]; then
+    echo "  Run this once (or open a new terminal):  source $RELOAD_RC"
+  fi
+  echo "  Then start Nexora with:  nexora"
+  echo ""
+else
+  echo ""
+  echo "Connect to your instance:"
+  echo "  nexora join  --url https://your-instance --token <INVITE_TOKEN>   # from an admin invite"
+  echo "  nexora login --url https://your-instance                          # email/password"
+  [ -n "$RELOAD_RC" ] && echo "" && warn "$BIN_DIR was added to PATH in $RELOAD_RC — run: source $RELOAD_RC"
+  echo ""
+fi

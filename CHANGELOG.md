@@ -3,6 +3,12 @@
 All notable changes to NexoraCLI. Newest first; one `## <version>` heading per release.
 The release CI extracts the section matching the pushed tag as the GitHub Release notes.
 
+## 0.6.0
+
+- New "nexora join" command redeems an organization invite in one step: it creates or signs in your account, pairs this terminal, and saves the instance, with no manual login.
+- The install one-liner now takes --join <token> --url <instance> (or the NEXORA_JOIN_TOKEN and NEXORA_URL environment variables), so an admin can share a single copy-paste command that installs the CLI and connects it.
+- The installer adds the binary to your shell PATH (.zshrc, .bashrc or .profile) and, when a join token is present, runs the join for you and points you at your instance.
+
 ## 0.5.3
 
 - The "thinking" spinner next to the assistant header now actually animates while a turn is streaming, instead of sitting frozen.

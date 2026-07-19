@@ -290,6 +290,18 @@ func (c *Client) DevicePair(ctx context.Context, code, name, platform string) (*
 	return &dp, nil
 }
 
+// CLIRedeem exchanges an org invite token for a ready-to-use account: an access JWT,
+// a device token (for refresh), and a durable nxr_ API key — auto-creating the account
+// if it does not exist yet. No prior authentication required.
+func (c *Client) CLIRedeem(ctx context.Context, token, name, platform string) (*CLIRedeemResponse, error) {
+	var rr CLIRedeemResponse
+	if err := c.doOnce(ctx, http.MethodPost, "/auth/cli/redeem", CLIRedeemRequest{token, name, platform}, &rr, false); err != nil {
+		return nil, err
+	}
+	c.setTokens(rr.AccessToken, "")
+	return &rr, nil
+}
+
 func (c *Client) setTokens(access, refresh string) {
 	c.tokMu.Lock()
 	if access != "" {

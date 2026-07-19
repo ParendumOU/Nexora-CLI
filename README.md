@@ -78,6 +78,30 @@ hint in the header. Set `NEXORA_NO_UPDATE_CHECK=1` to turn the launch-time check
 
 ## Quick start
 
+The easiest path is an invite from your admin. In the web app go to
+Organization → Invites → "Invite to the terminal (CLI)", enter the teammate's
+email, and copy the generated command. They paste it once and they're in — it
+installs the CLI, creates their account in the org, and pairs the terminal:
+
+```bash
+# macOS / Linux (the exact command comes from your admin, token filled in)
+curl -fsSL https://raw.githubusercontent.com/ParendumOU/Nexora-CLI/main/install.sh | bash -s -- \
+  --join <INVITE_TOKEN> --url https://nexora.example.com
+```
+
+```powershell
+# Windows (PowerShell)
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/ParendumOU/Nexora-CLI/main/install.ps1))) -Join <INVITE_TOKEN> -Url https://nexora.example.com
+```
+
+Already have the binary? Redeem an invite directly:
+
+```bash
+nexora join --url https://nexora.example.com --token <INVITE_TOKEN>
+```
+
+Or connect manually:
+
 ```bash
 # Option A — email/password
 nexora login --url https://nexora.example.com --name work

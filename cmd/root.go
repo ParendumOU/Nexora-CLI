@@ -34,6 +34,7 @@ var rootCmd = &cobra.Command{
 		inst := cfg.CurrentInstance()
 		if inst == nil {
 			fmt.Println("No Nexora instance configured.")
+			fmt.Println("  nexora join    — redeem an invite from your admin (no login needed)")
 			fmt.Println("  nexora login   — email/password against an instance")
 			fmt.Println("  nexora pair    — pair via a code from the web Settings → Devices")
 			return nil

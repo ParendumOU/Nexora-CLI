@@ -44,6 +44,25 @@ type DevicePairResponse struct {
 	UserEmail   string `json:"user_email"`
 }
 
+// ── CLI zero-touch onboarding (redeem an org invite → account + key + device) ───
+
+type CLIRedeemRequest struct {
+	Token      string `json:"token"`
+	DeviceName string `json:"device_name"`
+	Platform   string `json:"platform"`
+}
+
+type CLIRedeemResponse struct {
+	AccessToken    string `json:"access_token"`
+	DeviceToken    string `json:"device_token"`
+	APIKey         string `json:"api_key"`
+	OrgID          string `json:"org_id"`
+	OrgName        string `json:"org_name"`
+	UserEmail      string `json:"user_email"`
+	UserName       string `json:"user_name"`
+	CreatedAccount bool   `json:"created_account"`
+}
+
 // ── agents ──────────────────────────────────────────────────────────────────────
 
 type Agent struct {
