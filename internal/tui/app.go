@@ -47,18 +47,69 @@ var tabNames = []string{"chat", "sessions", "channels", "projects", "board", "ta
 // via the ctrl+k palette). Keeps the main menu compact.
 var simpleTabs = []int{tabChat, tabSessions, tabSettings}
 
-// visibleTabs returns the tab indices shown in the header for the current UI mode. In
-// simple mode that's the reduced set plus the active tab (so a tab reached via ctrl+k is
-// still shown highlighted).
+// tabPerm maps a tab to the permission key required to see it. Tabs absent from
+// the map (chat, sessions) are always available. Mirrors the web sidebar gating.
+var tabPerm = map[int]string{
+	tabChannels:  "channels.view",
+	tabProjects:  "projects.view",
+	tabBoard:     "tasks.view",
+	tabTasks:     "tasks.view",
+	tabIssues:    "issues.view",
+	tabSchedules: "schedules.view",
+	tabAgents:    "agents.view",
+	tabKB:        "knowledge_bases.view",
+	tabProviders: "providers.view",
+	tabMarket:    "marketplace.view",
+	tabSettings:  "settings.view",
+}
+
+// can reports whether the caller holds permission key. Fails OPEN until the
+// effective policy is loaded (perms == nil) — the backend still enforces every
+// mutation, so a brief render before perms arrive can't leak a real action.
+func (m *model) can(key string) bool {
+	if key == "" {
+		return true
+	}
+	if m.perms == nil {
+		return true
+	}
+	for _, p := range m.perms.Permissions {
+		if p == key {
+			return true
+		}
+	}
+	return false
+}
+
+// canSeeTab reports whether the tab is permitted for the caller.
+func (m *model) canSeeTab(tab int) bool {
+	return m.can(tabPerm[tab])
+}
+
+// advancedAllowed reports whether the caller may use the advanced UI mode.
+func (m *model) advancedAllowed() bool {
+	return m.can("ui.advanced_mode")
+}
+
+// visibleTabs returns the tab indices shown in the header for the current UI mode,
+// filtered by the caller's permissions. In simple mode that's the reduced set plus
+// the active tab (so a tab reached via ctrl+k is still shown highlighted).
 func (m *model) visibleTabs() []int {
 	if m.uiMode != "simple" {
-		all := make([]int, len(tabNames))
+		all := make([]int, 0, len(tabNames))
 		for i := range tabNames {
-			all[i] = i
+			if m.canSeeTab(i) {
+				all = append(all, i)
+			}
 		}
 		return all
 	}
-	vis := append([]int{}, simpleTabs...)
+	vis := make([]int, 0, len(simpleTabs)+1)
+	for _, t := range simpleTabs {
+		if m.canSeeTab(t) {
+			vis = append(vis, t)
+		}
+	}
 	inSet := false
 	for _, t := range vis {
 		if t == m.activeTab {
@@ -66,8 +117,11 @@ func (m *model) visibleTabs() []int {
 			break
 		}
 	}
-	if !inSet {
+	if !inSet && m.canSeeTab(m.activeTab) {
 		vis = append(vis, m.activeTab)
+	}
+	if len(vis) == 0 {
+		vis = append(vis, tabChat)
 	}
 	return vis
 }
@@ -131,6 +185,7 @@ type model struct {
 	envVarSel     int
 	usage         *api.UsageSummary
 	me            *api.Me
+	perms         *api.Permissions // effective policy (nil until loaded → fail open)
 	mktKeySet     bool
 	backupJobID   string
 	backupStatus  string
@@ -363,7 +418,7 @@ func currentDir() string {
 
 func (m *model) Init() tea.Cmd {
 	m.input.Focus()
-	return tea.Batch(m.spinner.Tick, textinput.Blink, m.loadMe(), m.loadAgents(), m.loadChats(), loadChainsCmd(m.client))
+	return tea.Batch(m.spinner.Tick, textinput.Blink, m.loadMe(), m.loadPermissions(), m.loadAgents(), m.loadChats(), loadChainsCmd(m.client))
 }
 
 func (m *model) loadMe() tea.Cmd {
@@ -377,7 +432,19 @@ func (m *model) loadMe() tea.Cmd {
 	}
 }
 
+func (m *model) loadPermissions() tea.Cmd {
+	c := m.client
+	return func() tea.Msg {
+		p, err := c.GetMyPermissions(context.Background())
+		if err != nil {
+			return nil
+		}
+		return permsMsg{p}
+	}
+}
+
 type meMsg struct{ me *api.Me }
+type permsMsg struct{ p *api.Permissions }
 
 // ── messages ────────────────────────────────────────────────────────────────────
 
@@ -1003,6 +1070,24 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.me = msg.me
 			m.userName = orDefault(msg.me.FullName, msg.me.Email)
 			m.rebuildBlocks() // re-label existing "you" blocks
+			if m.activeTab == tabSettings {
+				m.settingsVP.SetContent(m.settingsContent())
+			}
+		}
+		return m, nil
+	case permsMsg:
+		if msg.p != nil {
+			m.perms = msg.p
+			// Admin revoked advanced mode → force the compact interface.
+			if !m.advancedAllowed() {
+				m.uiMode = "simple"
+			}
+			// If the current tab is no longer permitted, snap back to Chat.
+			if !m.canSeeTab(m.activeTab) {
+				m.activeTab = tabChat
+			}
+			// Rebuild the ctrl+k palette so denied screens drop out.
+			m.palette.SetItems(m.paletteItems())
 			if m.activeTab == tabSettings {
 				m.settingsVP.SetContent(m.settingsContent())
 			}

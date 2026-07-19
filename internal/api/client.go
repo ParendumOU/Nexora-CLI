@@ -647,6 +647,14 @@ func (c *Client) Me(ctx context.Context) (*Me, error) {
 	return &out, err
 }
 
+// GetMyPermissions returns the caller's effective policy in the active org
+// (permission keys, restricted flag, limits, capabilities, budget snapshot).
+func (c *Client) GetMyPermissions(ctx context.Context) (*Permissions, error) {
+	var out Permissions
+	err := c.do(ctx, http.MethodGet, "/permissions/me", nil, &out)
+	return &out, err
+}
+
 // UpdateMe patches the current user's profile (name/avatar/AI-memory/contact).
 func (c *Client) UpdateMe(ctx context.Context, in MeUpdate) (*Me, error) {
 	var out Me

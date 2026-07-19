@@ -268,6 +268,30 @@ type Me struct {
 	IsSuperuser    bool   `json:"is_superuser"`
 }
 
+// ── effective permissions / governance (GET /permissions/me) ─────────────────
+
+// Budget is the per-user token-budget snapshot. Budget == 0 (and Remaining nil)
+// means no budget is set for the user.
+type Budget struct {
+	Budget      int  `json:"budget"`
+	Used        int  `json:"used"`
+	Remaining   *int `json:"remaining"`
+	WindowHours int  `json:"window_hours"`
+}
+
+// Permissions is the caller's effective policy in the active org. The CLI uses
+// Permissions[] to gate which tabs/screens are shown; capability list-allowlists
+// are already applied server-side to the list endpoints, so they are not needed
+// here. Limits/Capabilities are kept as raw maps for forward compatibility.
+type Permissions struct {
+	OrgID        string         `json:"org_id"`
+	Permissions  []string       `json:"permissions"`
+	Restricted   bool           `json:"restricted"`
+	Limits       map[string]any `json:"limits"`
+	Capabilities map[string]any `json:"capabilities"`
+	Budget       Budget         `json:"budget"`
+}
+
 // MeUpdate is a partial profile patch (only non-nil fields are sent).
 type MeUpdate struct {
 	FullName    *string `json:"full_name,omitempty"`

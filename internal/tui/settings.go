@@ -108,7 +108,11 @@ func (m *model) viewSetInterface() string {
 	}
 	b.WriteString(mark("simple", "compact — only Chat, Sessions, Settings tabs"))
 	b.WriteString(mark("advanced", "everything — all tabs + panels"))
-	b.WriteString("\n" + t.Help.Render("Other tabs stay reachable via ctrl+k in simple mode."))
+	if !m.advancedAllowed() {
+		b.WriteString("\n" + t.Help.Render("Advanced mode is disabled by your organization admin."))
+	} else {
+		b.WriteString("\n" + t.Help.Render("Other tabs stay reachable via ctrl+k in simple mode."))
+	}
 	return b.String()
 }
 
@@ -328,6 +332,12 @@ func (m *model) settingsKey(k tea.KeyMsg) (tea.Cmd, bool) {
 		}
 	case setInterface:
 		if k.String() == "space" || k.String() == " " || k.String() == "enter" {
+			// Advanced mode can be revoked by an org admin (ui.advanced_mode).
+			if !m.advancedAllowed() {
+				m.uiMode = "simple"
+				m.status = "advanced mode disabled by your organization admin"
+				return nil, true
+			}
 			if m.uiMode == "simple" {
 				m.uiMode = "advanced"
 			} else {

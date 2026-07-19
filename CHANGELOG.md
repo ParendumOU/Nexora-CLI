@@ -3,6 +3,13 @@
 All notable changes to NexoraCLI. Newest first; one `## <version>` heading per release.
 The release CI extracts the section matching the pushed tag as the GitHub Release notes.
 
+## 0.5.0
+
+- Respects the per-user limits an org admin sets on the server. The TUI now hides menu tabs and command-palette entries for sections you do not have permission to see, matching the web app.
+- Forces the simple interface when your organization has disabled advanced mode for you, and locks the interface toggle in Settings.
+- Hides the Settings tab when you are not allowed to open settings.
+- Agents, providers, skills, tools, personas and chains already come filtered to what you are assigned, so the pickers only show what you may use.
+
 ## 0.4.2
 
 - Self-update: `nexora update` downloads the latest release binary for your OS and replaces the running executable in place; `nexora update --check` only reports whether a newer version exists.

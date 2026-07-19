@@ -14,23 +14,61 @@ func (i paletteItem) Title() string       { return i.label }
 func (i paletteItem) Description() string  { return i.desc }
 func (i paletteItem) FilterValue() string  { return i.label }
 
-func paletteItems() []list.Item {
-	return []list.Item{
-		paletteItem{"new", "New chat", "Pick an agent and start a fresh chat"},
-		paletteItem{"sessions", "Open session", "Browse and open an existing chat"},
-		paletteItem{"agents", "Agents", "Create / edit / delete agents"},
-		paletteItem{"providers", "Providers", "Manage LLM provider accounts"},
-		paletteItem{"kb", "Knowledge bases", "Manage knowledge bases and files"},
-		paletteItem{"board", "Board", "Kanban board of tasks by status"},
-		paletteItem{"issues", "Issues", "Project issue tracker"},
-		paletteItem{"schedules", "Schedules", "Recurring agent jobs"},
-		paletteItem{"market", "Marketplace", "Browse and install packages"},
-		paletteItem{"settings", "Settings", "Profile, orgs, usage, devices, backup"},
-		paletteItem{"projects", "Projects", "Browse org projects"},
-		paletteItem{"tasks", "Tasks", "Tasks for the current chat"},
-		paletteItem{"refresh", "Refresh", "Reload current data"},
-		paletteItem{"quit", "Quit", "Exit NexoraCLI"},
+// palettePerm maps a palette action id to the permission key it needs. Ids absent
+// from the map (new/sessions/tasks/refresh/quit) are always available. "new" and
+// "tasks" are chat-scoped, not gated; "agents" opens the agents screen so it needs
+// agents.view.
+var palettePerm = map[string]string{
+	"agents":    "agents.view",
+	"providers": "providers.view",
+	"kb":        "knowledge_bases.view",
+	"board":     "tasks.view",
+	"issues":    "issues.view",
+	"schedules": "schedules.view",
+	"market":    "marketplace.view",
+	"settings":  "settings.view",
+	"projects":  "projects.view",
+}
+
+func allPaletteItems() []paletteItem {
+	return []paletteItem{
+		{"new", "New chat", "Pick an agent and start a fresh chat"},
+		{"sessions", "Open session", "Browse and open an existing chat"},
+		{"agents", "Agents", "Create / edit / delete agents"},
+		{"providers", "Providers", "Manage LLM provider accounts"},
+		{"kb", "Knowledge bases", "Manage knowledge bases and files"},
+		{"board", "Board", "Kanban board of tasks by status"},
+		{"issues", "Issues", "Project issue tracker"},
+		{"schedules", "Schedules", "Recurring agent jobs"},
+		{"market", "Marketplace", "Browse and install packages"},
+		{"settings", "Settings", "Profile, orgs, usage, devices, backup"},
+		{"projects", "Projects", "Browse org projects"},
+		{"tasks", "Tasks", "Tasks for the current chat"},
+		{"refresh", "Refresh", "Reload current data"},
+		{"quit", "Quit", "Exit NexoraCLI"},
 	}
+}
+
+// paletteItems is the initial (unfiltered) command list used before the effective
+// policy loads — it fails open, matching the tab gating.
+func paletteItems() []list.Item {
+	all := allPaletteItems()
+	out := make([]list.Item, len(all))
+	for i := range all {
+		out[i] = all[i]
+	}
+	return out
+}
+
+// paletteItems (method) filters the command list by the caller's permissions.
+func (m *model) paletteItems() []list.Item {
+	out := make([]list.Item, 0, 14)
+	for _, it := range allPaletteItems() {
+		if m.can(palettePerm[it.id]) {
+			out = append(out, it)
+		}
+	}
+	return out
 }
 
 func (m *model) updatePalette(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -52,6 +90,10 @@ func (m *model) updatePalette(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m *model) runPaletteAction(id string) (tea.Model, tea.Cmd) {
+	// Defense in depth: never act on a screen the caller may not see.
+	if !m.can(palettePerm[id]) {
+		return m, nil
+	}
 	switch id {
 	case "new", "agents":
 		m.activeTab = tabAgents
