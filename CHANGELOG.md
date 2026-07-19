@@ -3,6 +3,12 @@
 All notable changes to NexoraCLI. Newest first; one `## <version>` heading per release.
 The release CI extracts the section matching the pushed tag as the GitHub Release notes.
 
+## 0.5.1
+
+- Failed turns now show a red error card in the chat the moment they happen, instead of leaving the turn blank until you switch chats and back.
+- Provider errors are parsed to a short headline plus reason (for example the "Invalid API key" behind a 401) rather than a raw dictionary dumped as if it were the assistant's reply.
+- A persisted error message is rendered as the same red card on reload, never folded into a normal assistant bubble.
+
 ## 0.5.0
 
 - Respects the per-user limits an org admin sets on the server. The TUI now hides menu tabs and command-palette entries for sections you do not have permission to see, matching the web app.

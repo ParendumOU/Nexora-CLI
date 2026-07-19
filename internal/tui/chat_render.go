@@ -376,6 +376,54 @@ func (m *model) thinkCollapsed(steps int) string {
 }
 
 // renderUserBlock renders a user turn as a faint background card.
+// reErrMessage pulls the human-readable reason out of a provider error payload
+// (Python-dict or JSON shaped), e.g. 'message': 'Invalid API key.'.
+var reErrMessage = regexp.MustCompile(`['"]message['"]\s*:\s*['"]([^'"]+)['"]`)
+
+// isErrorMsg reports whether a message is a failed-turn error (backend sets
+// metadata.error=true on the excluded assistant message it persists on failure).
+func isErrorMsg(msg api.Message) bool {
+	if msg.Metadata == nil {
+		return false
+	}
+	b, _ := msg.Metadata["error"].(bool)
+	return b
+}
+
+// formatErrorText turns a raw provider error into a short headline + reason.
+// Input example:
+//   opencode-zen auth error: Error code: 401 - {'type': 'error', 'error': {'type': 'AuthError', 'message': 'Invalid API key.'}}
+// →  headline: "opencode-zen auth error: Error code: 401", reason: "Invalid API key."
+func formatErrorText(raw string) (headline, reason string) {
+	raw = strings.TrimSpace(raw)
+	headline = raw
+	// Cut the raw dict/JSON tail off the headline if present.
+	if i := strings.Index(headline, " - {"); i >= 0 {
+		headline = strings.TrimSpace(headline[:i])
+	} else if i := strings.Index(headline, " {"); i >= 0 && strings.Contains(headline[i:], "message") {
+		headline = strings.TrimSpace(headline[:i])
+	}
+	if mt := reErrMessage.FindStringSubmatch(raw); len(mt) == 2 {
+		reason = strings.TrimSpace(mt[1])
+	}
+	// If nothing structured was found, keep the (already trimmed) raw as headline.
+	return headline, reason
+}
+
+// renderErrorBlock renders a failed turn as a red card, never as a normal reply.
+func (m *model) renderErrorBlock(msg api.Message) string {
+	t := m.theme
+	w := max(20, m.transcript.Width)
+	headline, reason := formatErrorText(msg.Content)
+	var b strings.Builder
+	b.WriteString(t.ErrorText.Render("⚠ error") + "\n")
+	b.WriteString(wrap(headline, w-2))
+	if reason != "" && reason != headline {
+		b.WriteString("\n" + wrap(reason, w-2))
+	}
+	return t.ErrorBlock.Width(w).Render(b.String())
+}
+
 func (m *model) renderUserBlock(msg api.Message) string {
 	t := m.theme
 	w := max(20, m.transcript.Width)

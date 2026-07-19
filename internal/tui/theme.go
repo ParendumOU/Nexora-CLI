@@ -26,6 +26,8 @@ type Theme struct {
 	Spinner     lipgloss.Style
 	UserBlock   lipgloss.Style // faint background card for user turns
 	AsstBlock   lipgloss.Style // faint background card for assistant turns
+	ErrorText   lipgloss.Style // red bold — error headline
+	ErrorBlock  lipgloss.Style // faint red card for a failed turn
 }
 
 // DefaultTheme — Nexora violet.
@@ -54,6 +56,9 @@ func DefaultTheme() Theme {
 	// Faint background cards differentiate user vs assistant (terminal "opacity").
 	t.UserBlock = lipgloss.NewStyle().Background(lipgloss.Color("#241B33")).Padding(0, 1)
 	t.AsstBlock = lipgloss.NewStyle().Background(lipgloss.Color("#15171E")).Padding(0, 1)
+	// Failed turns: red text on a faint red card so an error never reads as a reply.
+	t.ErrorText = lipgloss.NewStyle().Foreground(bad).Bold(true)
+	t.ErrorBlock = lipgloss.NewStyle().Foreground(bad).Background(lipgloss.Color("#2A1414")).Padding(0, 1)
 	return t
 }
 

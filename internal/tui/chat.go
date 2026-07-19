@@ -320,6 +320,14 @@ func (m *model) rebuildBlocks() {
 	i := 0
 	for i < len(m.messages) {
 		msg := m.messages[i]
+		// A failed turn (metadata.error) renders as its own red card, never folded
+		// into an assistant reply — even though the backend stores it excluded.
+		if isErrorMsg(msg) {
+			m.renderedBlocks = append(m.renderedBlocks, m.renderErrorBlock(msg))
+			m.blockTexts = append(m.blockTexts, strings.TrimSpace(msg.Content))
+			i++
+			continue
+		}
 		if displayable(msg) && msg.Role == "user" {
 			m.renderedBlocks = append(m.renderedBlocks, m.renderUserBlock(msg))
 			m.blockTexts = append(m.blockTexts, strings.TrimSpace(msg.Content))
@@ -335,6 +343,9 @@ func (m *model) rebuildBlocks() {
 				mm := m.messages[i]
 				if displayable(mm) && mm.Role == "user" {
 					break // a real user turn ends the assistant group
+				}
+				if isErrorMsg(mm) {
+					break // an error ends the group and renders as its own red card
 				}
 				if mm.Role == "assistant" {
 					if mm.AgentName != "" {
@@ -506,8 +517,34 @@ func (m *model) handleFrame(f ws.Frame) (tea.Model, tea.Cmd) {
 		}
 		return m, rearm
 
-	case "error", "tool_parse_error":
-		m.status = "error: " + f.Message
+	case "error":
+		// A failed turn. Show it LIVE as a red error card (parity with the web,
+		// which renders the persisted excluded error message). The backend also
+		// persists it, so on reload it renders the same way via rebuildBlocks.
+		m.streaming = false
+		m.assistantBuf = ""
+		if strings.TrimSpace(f.Message) != "" {
+			dup := false
+			if f.MessageID != "" {
+				for _, mm := range m.messages {
+					if mm.ID == f.MessageID {
+						dup = true
+						break
+					}
+				}
+			}
+			if !dup {
+				m.appendMessage(api.Message{
+					ID: f.MessageID, Role: "assistant", Content: f.Message,
+					Excluded: true, Metadata: map[string]any{"error": true},
+				})
+			}
+		}
+		m.status = ""
+		m.renderTranscript()
+
+	case "tool_parse_error":
+		m.status = "parse warning: " + f.Message
 		m.streaming = false
 		m.renderTranscript()
 	}
