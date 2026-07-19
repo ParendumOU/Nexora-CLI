@@ -3,6 +3,12 @@
 All notable changes to NexoraCLI. Newest first; one `## <version>` heading per release.
 The release CI extracts the section matching the pushed tag as the GitHub Release notes.
 
+## 0.4.2
+
+- Self-update: `nexora update` downloads the latest release binary for your OS and replaces the running executable in place; `nexora update --check` only reports whether a newer version exists.
+- On launch the TUI checks GitHub for a newer release (at most once a day, cached) and shows an "update available" hint in the header when one is out.
+- Set NEXORA_NO_UPDATE_CHECK=1 to disable the launch-time check; dev builds never check.
+
 ## 0.4.1
 
 - Connect to older instances again: the chat WebSocket now retries with the legacy token query param when a core older than v1.10.0 rejects the Authorization header, so a current CLI still reaches an older server (login worked but chat would not connect before).

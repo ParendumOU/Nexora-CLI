@@ -37,6 +37,12 @@ type Config struct {
 	// UIMode controls TUI complexity: "simple" hides advanced tabs, "advanced" shows all.
 	UIMode string `toml:"ui_mode"`
 
+	// Update-check cache: LastUpdateCheck is the unix time of the last GitHub release
+	// lookup; LatestKnownVersion is the newest tag seen. Throttles the launch-time check
+	// to once per day and drives the "update available" header hint from cache in between.
+	LastUpdateCheck    int64  `toml:"last_update_check"`
+	LatestKnownVersion string `toml:"latest_known_version"`
+
 	path string `toml:"-"`
 }
 

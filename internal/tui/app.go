@@ -87,11 +87,12 @@ func (m *model) nextVisibleTab(dir int) int {
 }
 
 type model struct {
-	client   *api.Client
-	instName string
-	version  string
-	userName string
-	theme    Theme
+	client     *api.Client
+	instName   string
+	version    string
+	updateHint string // newer release tag to advertise in the header, or "" if up to date
+	userName   string
+	theme      Theme
 
 	width, height int
 	ready         bool
@@ -268,8 +269,9 @@ type model struct {
 }
 
 // Run starts the TUI against the given instance client.
-func Run(client *api.Client, instName, version string, localExec, yolo bool, uiMode string, saveLocal func(le, yo bool), saveUI func(string)) error {
+func Run(client *api.Client, instName, version, updateHint string, localExec, yolo bool, uiMode string, saveLocal func(le, yo bool), saveUI func(string)) error {
 	m := newModel(client, instName, version)
+	m.updateHint = updateHint
 	m.activeMode = "flash"
 	m.localExec = localExec
 	m.localYolo = yolo && localExec
@@ -1433,6 +1435,13 @@ func (m *model) renderHeader() string {
 	}
 	title += " " + lipgloss.NewStyle().Foreground(dotColor).Bold(true).Render("●")
 	row := lipgloss.JoinHorizontal(lipgloss.Center, title, " ", strings.Join(tabs, " "))
+	// Update hint: a newer release is available (throttled check at launch). Nudge toward
+	// `nexora update`.
+	if m.updateHint != "" {
+		chip := lipgloss.NewStyle().Foreground(t.Accent2).Bold(true).
+			Render("  ↑ " + m.updateHint + " · nexora update")
+		row = lipgloss.JoinHorizontal(lipgloss.Center, row, chip)
+	}
 	rule := lipgloss.NewStyle().Foreground(t.Subtle).Render(strings.Repeat("─", max(0, m.width)))
 	return row + "\n" + rule
 }

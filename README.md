@@ -63,8 +63,18 @@ put it on your `PATH` as `nexora`, or build it yourself:
 
 ```bash
 make build        # → bin/nexora (built inside the golang container; no host Go needed)
-make build-all    # → dist/ for linux-amd64, darwin-arm64, windows-amd64
+make build-all    # → dist/ for linux/macOS/Windows on amd64 and arm64
 ```
+
+### Updating
+
+```bash
+nexora update           # download the latest release and replace the running binary
+nexora update --check   # just report whether a newer version is available
+```
+
+On launch the TUI checks for a newer release once a day and shows an "update available"
+hint in the header. Set `NEXORA_NO_UPDATE_CHECK=1` to turn the launch-time check off.
 
 ## Quick start
 
