@@ -418,7 +418,17 @@ func currentDir() string {
 
 func (m *model) Init() tea.Cmd {
 	m.input.Focus()
-	return tea.Batch(m.spinner.Tick, textinput.Blink, m.loadMe(), m.loadPermissions(), m.loadAgents(), m.loadChats(), loadChainsCmd(m.client))
+	return tea.Batch(m.spinner.Tick, textinput.Blink, m.loadMe(), m.loadPermissions(), m.loadAgents(), m.loadChats(), loadChainsCmd(m.client), heartbeatTick())
+}
+
+// heartbeatMsg drives a periodic connectivity refresh so the header dot reflects
+// reality even when the user is idle on the start screen. Without it a single
+// transient failure at startup (e.g. the server restarting) leaves the dot stuck
+// "disconnected" until the next manual request.
+type heartbeatMsg struct{}
+
+func heartbeatTick() tea.Cmd {
+	return tea.Tick(15*time.Second, func(time.Time) tea.Msg { return heartbeatMsg{} })
 }
 
 func (m *model) loadMe() tea.Cmd {
@@ -951,6 +961,12 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.spinner, cmd = m.spinner.Update(msg)
 		return m, cmd
 
+	case heartbeatMsg:
+		// Re-arm + refresh connectivity. loadMe sets connected=true on success and
+		// swallows errors, so a stale "disconnected" dot self-heals once the server
+		// is reachable again.
+		return m, tea.Batch(heartbeatTick(), m.loadMe())
+
 	case errMsg:
 		// An APIError means the server replied (we're connected) → show its clean detail.
 		// Any other error is transport-level (server unreachable) → just flip to Disconnected,
@@ -1067,6 +1083,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case meMsg:
 		if msg.me != nil {
+			m.connected = true // a successful /users/me proves the server is reachable
 			m.me = msg.me
 			m.userName = orDefault(msg.me.FullName, msg.me.Email)
 			m.rebuildBlocks() // re-label existing "you" blocks
@@ -1077,6 +1094,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case permsMsg:
 		if msg.p != nil {
+			m.connected = true // a successful /permissions/me proves reachability
 			m.perms = msg.p
 			// Admin revoked advanced mode → force the compact interface.
 			if !m.advancedAllowed() {

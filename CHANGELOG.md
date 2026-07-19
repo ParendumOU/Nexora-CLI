@@ -3,6 +3,10 @@
 All notable changes to NexoraCLI. Newest first; one `## <version>` heading per release.
 The release CI extracts the section matching the pushed tag as the GitHub Release notes.
 
+## 0.5.2
+
+- The connection dot in the header no longer gets stuck on red after a one-off failure at startup (for example the server restarting). A successful profile or permissions load now marks the connection healthy, and a periodic heartbeat refreshes it while you are idle.
+
 ## 0.5.1
 
 - Failed turns now show a red error card in the chat the moment they happen, instead of leaving the turn blank until you switch chats and back.
