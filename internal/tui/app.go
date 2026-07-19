@@ -959,6 +959,12 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case spinner.TickMsg:
 		var cmd tea.Cmd
 		m.spinner, cmd = m.spinner.Update(msg)
+		// The spinner glyph is baked into the transcript content at render time, so
+		// re-render on each tick while a turn is streaming — otherwise the "thinking"
+		// spinner next to the assistant header sits frozen.
+		if m.streaming {
+			m.renderTranscript()
+		}
 		return m, cmd
 
 	case heartbeatMsg:

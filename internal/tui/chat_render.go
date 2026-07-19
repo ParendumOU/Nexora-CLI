@@ -390,38 +390,81 @@ func isErrorMsg(msg api.Message) bool {
 	return b
 }
 
-// formatErrorText turns a raw provider error into a short headline + reason.
+var reErrCode = regexp.MustCompile(`(?i)(?:error code|status|code)[:\s]+(\d{3})`)
+
+// formatErrorLine condenses a raw provider error into a single plain line: a short
+// reason plus a hint, no icons. It classifies the common failures (auth, rate
+// limit, quota, server) and falls back to the payload's own message otherwise.
 // Input example:
-//   opencode-zen auth error: Error code: 401 - {'type': 'error', 'error': {'type': 'AuthError', 'message': 'Invalid API key.'}}
-// →  headline: "opencode-zen auth error: Error code: 401", reason: "Invalid API key."
-func formatErrorText(raw string) (headline, reason string) {
+//   opencode-zen auth error: Error code: 401 - {'type':'error','error':{'type':'AuthError','message':'Invalid API key.'}}
+// → "opencode-zen: invalid API key (401) - update the account key in Settings > Accounts"
+func formatErrorLine(raw string) string {
 	raw = strings.TrimSpace(raw)
-	headline = raw
-	// Cut the raw dict/JSON tail off the headline if present.
-	if i := strings.Index(headline, " - {"); i >= 0 {
-		headline = strings.TrimSpace(headline[:i])
-	} else if i := strings.Index(headline, " {"); i >= 0 && strings.Contains(headline[i:], "message") {
-		headline = strings.TrimSpace(headline[:i])
+
+	// Provider prefix = the leading word(s) before "auth error" / "error" / ":".
+	provider := ""
+	lower := strings.ToLower(raw)
+	for _, sep := range []string{" auth error", " error", ":"} {
+		if i := strings.Index(lower, sep); i > 0 {
+			provider = strings.TrimSpace(raw[:i])
+			break
+		}
 	}
+	if len(provider) > 30 || strings.ContainsAny(provider, "{}\n") {
+		provider = ""
+	}
+
+	code := ""
+	if mt := reErrCode.FindStringSubmatch(raw); len(mt) == 2 {
+		code = mt[1]
+	}
+	payloadMsg := ""
 	if mt := reErrMessage.FindStringSubmatch(raw); len(mt) == 2 {
-		reason = strings.TrimSpace(mt[1])
+		payloadMsg = strings.TrimSpace(mt[1])
 	}
-	// If nothing structured was found, keep the (already trimmed) raw as headline.
-	return headline, reason
+
+	hay := lower + " " + strings.ToLower(payloadMsg)
+	var reason, hint string
+	switch {
+	case code == "429" || strings.Contains(hay, "rate limit") || strings.Contains(hay, "too many requests"):
+		reason, hint = "rate limited", "wait a moment and retry, or add another account for this provider"
+	case strings.Contains(hay, "quota") || strings.Contains(hay, "insufficient") || strings.Contains(hay, "billing") || strings.Contains(hay, "credit"):
+		reason, hint = "quota or credit exhausted", "top up the provider account or switch to another"
+	case code == "401" || strings.Contains(hay, "invalid api key") || strings.Contains(hay, "unauthorized") || strings.Contains(hay, "autherror") || strings.Contains(hay, "auth error"):
+		reason, hint = "invalid API key", "update this account's key in Settings > Accounts"
+	case code == "403" || strings.Contains(hay, "forbidden") || strings.Contains(hay, "permission"):
+		reason, hint = "access denied", "check the account key and its permissions"
+	case strings.HasPrefix(code, "5"):
+		reason, hint = "provider server error", "retry shortly or switch provider"
+	default:
+		reason = payloadMsg
+		if reason == "" {
+			// Strip any dict/JSON tail for a clean fallback headline.
+			reason = raw
+			if i := strings.Index(reason, " - {"); i >= 0 {
+				reason = strings.TrimSpace(reason[:i])
+			}
+		}
+	}
+
+	line := reason
+	if provider != "" {
+		line = provider + ": " + reason
+	}
+	if code != "" && !strings.Contains(line, code) {
+		line += " (" + code + ")"
+	}
+	if hint != "" {
+		line += " - " + hint
+	}
+	return line
 }
 
-// renderErrorBlock renders a failed turn as a red card, never as a normal reply.
+// renderErrorBlock renders a failed turn as a single red line, never as a reply.
 func (m *model) renderErrorBlock(msg api.Message) string {
 	t := m.theme
 	w := max(20, m.transcript.Width)
-	headline, reason := formatErrorText(msg.Content)
-	var b strings.Builder
-	b.WriteString(t.ErrorText.Render("⚠ error") + "\n")
-	b.WriteString(wrap(headline, w-2))
-	if reason != "" && reason != headline {
-		b.WriteString("\n" + wrap(reason, w-2))
-	}
-	return t.ErrorBlock.Width(w).Render(b.String())
+	return t.ErrorBlock.Width(w).Render(t.ErrorText.Render(wrap(formatErrorLine(msg.Content), w-2)))
 }
 
 func (m *model) renderUserBlock(msg api.Message) string {

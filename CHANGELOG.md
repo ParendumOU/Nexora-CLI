@@ -3,6 +3,11 @@
 All notable changes to NexoraCLI. Newest first; one `## <version>` heading per release.
 The release CI extracts the section matching the pushed tag as the GitHub Release notes.
 
+## 0.5.3
+
+- The "thinking" spinner next to the assistant header now actually animates while a turn is streaming, instead of sitting frozen.
+- Turn errors are shown as a single plain red line with no icon: a short reason plus a hint, classified for the common cases (invalid API key, rate limited, quota exhausted, access denied, server error). Example: "opencode-zen: invalid API key (401) - update this account's key in Settings > Accounts".
+
 ## 0.5.2
 
 - The connection dot in the header no longer gets stuck on red after a one-off failure at startup (for example the server restarting). A successful profile or permissions load now marks the connection healthy, and a periodic heartbeat refreshes it while you are idle.
