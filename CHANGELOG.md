@@ -3,6 +3,12 @@
 All notable changes to NexoraCLI. Newest first; one `## <version>` heading per release.
 The release CI extracts the section matching the pushed tag as the GitHub Release notes.
 
+## 0.4.1
+
+- Connect to older instances again: the chat WebSocket now retries with the legacy token query param when a core older than v1.10.0 rejects the Authorization header, so a current CLI still reaches an older server (login worked but chat would not connect before).
+- Modern instances are unchanged: the token is still sent only in the Authorization header and never in the URL.
+- Release binaries added for linux-arm64, darwin-amd64 and windows-arm64 (fixes install on Intel Macs, ARM Linux and Windows on ARM).
+
 ## 0.4.0
 
 - One-liner installers: install.sh (Linux/macOS) and install.ps1 (Windows) download the latest release binary and put it on PATH as nexora.

@@ -16,12 +16,16 @@ tidy:
 build: tidy
 	$(DOCKER_RUN) "go build -ldflags '$(LDFLAGS)' -o bin/$(BIN) ."
 
-# Cross-compile for the three host OSes (static, zero-dep binaries).
+# Cross-compile for every supported host OS/arch (static, zero-dep binaries).
+# Names must match the install scripts' `nexora-vX.Y.Z-<os>-<arch>[.exe]` lookup.
 build-all: tidy
 	$(DOCKER_RUN) "\
 	  GOOS=linux   GOARCH=amd64 go build -ldflags '$(LDFLAGS)' -o dist/$(BIN)-linux-amd64 . && \
+	  GOOS=linux   GOARCH=arm64 go build -ldflags '$(LDFLAGS)' -o dist/$(BIN)-linux-arm64 . && \
+	  GOOS=darwin  GOARCH=amd64 go build -ldflags '$(LDFLAGS)' -o dist/$(BIN)-darwin-amd64 . && \
 	  GOOS=darwin  GOARCH=arm64 go build -ldflags '$(LDFLAGS)' -o dist/$(BIN)-darwin-arm64 . && \
-	  GOOS=windows GOARCH=amd64 go build -ldflags '$(LDFLAGS)' -o dist/$(BIN)-windows-amd64.exe ."
+	  GOOS=windows GOARCH=amd64 go build -ldflags '$(LDFLAGS)' -o dist/$(BIN)-windows-amd64.exe && \
+	  GOOS=windows GOARCH=arm64 go build -ldflags '$(LDFLAGS)' -o dist/$(BIN)-windows-arm64.exe ."
 
 test:
 	$(DOCKER_RUN) "go test ./..."

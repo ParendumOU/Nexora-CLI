@@ -25,8 +25,11 @@ if [[ "${1:-}" == "--all" ]]; then
   echo "==> cross-compiling all targets (v${VERSION})"
   run_go "\
     GOOS=linux   GOARCH=amd64 go build -ldflags '${LDFLAGS}' -o dist/nexora-linux-amd64 . && \
+    GOOS=linux   GOARCH=arm64 go build -ldflags '${LDFLAGS}' -o dist/nexora-linux-arm64 . && \
+    GOOS=darwin  GOARCH=amd64 go build -ldflags '${LDFLAGS}' -o dist/nexora-darwin-amd64 . && \
     GOOS=darwin  GOARCH=arm64 go build -ldflags '${LDFLAGS}' -o dist/nexora-darwin-arm64 . && \
-    GOOS=windows GOARCH=amd64 go build -ldflags '${LDFLAGS}' -o dist/nexora-windows-amd64.exe ."
+    GOOS=windows GOARCH=amd64 go build -ldflags '${LDFLAGS}' -o dist/nexora-windows-amd64.exe && \
+    GOOS=windows GOARCH=arm64 go build -ldflags '${LDFLAGS}' -o dist/nexora-windows-arm64.exe ."
   echo "==> built into dist/"
   ls -lh "${REPO}/dist"
 else

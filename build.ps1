@@ -33,8 +33,11 @@ if ($All) {
     Write-Host "==> cross-compiling all targets (v$Version)" -ForegroundColor Cyan
     Invoke-Go @"
 GOOS=linux   GOARCH=amd64 go build -ldflags '$ldflags' -o dist/nexora-linux-amd64 . && \
+GOOS=linux   GOARCH=arm64 go build -ldflags '$ldflags' -o dist/nexora-linux-arm64 . && \
+GOOS=darwin  GOARCH=amd64 go build -ldflags '$ldflags' -o dist/nexora-darwin-amd64 . && \
 GOOS=darwin  GOARCH=arm64 go build -ldflags '$ldflags' -o dist/nexora-darwin-arm64 . && \
-GOOS=windows GOARCH=amd64 go build -ldflags '$ldflags' -o dist/nexora-windows-amd64.exe .
+GOOS=windows GOARCH=amd64 go build -ldflags '$ldflags' -o dist/nexora-windows-amd64.exe && \
+GOOS=windows GOARCH=arm64 go build -ldflags '$ldflags' -o dist/nexora-windows-arm64.exe .
 "@
     Write-Host "==> built into dist\" -ForegroundColor Green
     Get-ChildItem "$repo\dist" | Format-Table Name, Length

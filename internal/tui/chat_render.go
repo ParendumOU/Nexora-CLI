@@ -16,6 +16,7 @@ import (
 var (
 	reThinking    = regexp.MustCompile(`(?is)<(thinking|think)>(.*?)</(thinking|think)>`)
 	reThinkingOpen = regexp.MustCompile(`(?is)<(?:thinking|think)>`) // last unclosed open tag (live)
+	reThinkTag     = regexp.MustCompile(`(?i)</?(?:think|thinking)\s*>`) // orphan/unpaired tags
 	reProposal    = regexp.MustCompile(`(?is)<proposal>.*?</proposal>`)
 	reInternal    = regexp.MustCompile(`(?is)<\s*(analysis_thought|internal_thought|scratchpad)\s*>.*?<\s*/\s*(analysis_thought|internal_thought|scratchpad)\s*>`)
 	reFinal       = regexp.MustCompile(`(?i)<\s*final\s*/?\s*>`)
@@ -59,6 +60,8 @@ func cleanContent(s string) (text string, reasoning []string) {
 		}
 		s = s[:m[0]]
 	}
+	// Nuke orphan/unpaired reasoning tags (a bare </think> or <think> with no match).
+	s = reThinkTag.ReplaceAllString(s, "")
 	s = reProposal.ReplaceAllString(s, "")
 	s = reInternal.ReplaceAllString(s, "")
 	s = reSysObs.ReplaceAllString(s, "")
