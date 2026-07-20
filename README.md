@@ -34,7 +34,7 @@ the network (LAN, VPN, or public).
 
 - **🚀 One static binary, zero deps.** Drop `nexora` on your `PATH` — no Node, no Python, no Docker.
 - **⌨️ The whole platform, in your terminal.** Everything the web UI does, keyboard-driven.
-- **🖥️ Local tool execution.** Let agents run shell/file tools on *your* machine (opt-in, with consent prompts).
+- **🖥️ Runs on your machine.** The agent's shell/file tools run on the host where the CLI runs, never on the Nexora server, with consent prompts (`--yolo` / `/yolo` to auto-approve).
 - **🔗 Connects to any instance** over LAN, VPN, or public — switch between many with `nexora instance use`.
 
 ## Install

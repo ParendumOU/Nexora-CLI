@@ -19,8 +19,7 @@ import (
 var Version = "dev"
 
 var (
-	flagLocalExec bool
-	flagYolo      bool
+	flagYolo bool
 )
 
 var rootCmd = &cobra.Command{
@@ -40,11 +39,9 @@ var rootCmd = &cobra.Command{
 			return nil
 		}
 		client := newClient(cfg, inst)
-		// flags override; otherwise use the persisted preference.
-		localExec := flagLocalExec || cfg.LocalExec
 		yolo := flagYolo || cfg.LocalYolo
 		updateHint := checkForUpdate(cfg)
-		return tui.Run(client, cfg.Current, Version, updateHint, localExec, yolo, cfg.UIMode,
+		return tui.Run(client, cfg.Current, Version, updateHint, true, yolo, cfg.UIMode,
 			func(le, yo bool) {
 				cfg.LocalExec, cfg.LocalYolo = le, yo
 				_ = cfg.Save()
@@ -57,10 +54,8 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.Flags().BoolVar(&flagLocalExec, "local-exec", false,
-		"run the agent's shell/file tools on THIS machine instead of the server container (toggle in-TUI with /local)")
 	rootCmd.Flags().BoolVar(&flagYolo, "yolo", false,
-		"with --local-exec: auto-approve every local command without confirmation (dangerous)")
+		"auto-approve every command the agent runs on this machine without confirmation (dangerous)")
 }
 
 // checkForUpdate returns the newer version tag to hint in the TUI header, or "" if none.

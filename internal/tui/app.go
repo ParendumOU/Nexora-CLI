@@ -338,8 +338,9 @@ func Run(client *api.Client, instName, version, updateHint string, localExec, yo
 	m := newModel(client, instName, version)
 	m.updateHint = updateHint
 	m.activeMode = "flash"
-	m.localExec = localExec
-	m.localYolo = yolo && localExec
+	_ = localExec
+	m.localExec = true
+	m.localYolo = yolo
 	m.saveLocal = saveLocal
 	m.uiMode = uiMode
 	if m.uiMode != "simple" {
@@ -1070,15 +1071,10 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.connected = true
 		m.agents = msg.items
 		m.agentList.SetItems(toAgentItems(msg.items))
-		// Pick a default agent only when none is chosen yet — never override an explicit
-		// pick. With local-exec on, the default is the Local Operator (direct, terse);
-		// otherwise the first agent. The user can /agent to any agent and it sticks — the
-		// local_exec_env prompt lets any agent run local tools and decide on delegation.
+		// Default to the Local Operator when no agent is chosen; first agent as fallback.
 		if m.activeAgentID == "" {
-			if m.localExec {
-				if id := m.localOperatorID(); id != "" {
-					m.activeAgentID = id
-				}
+			if id := m.localOperatorID(); id != "" {
+				m.activeAgentID = id
 			}
 			if m.activeAgentID == "" && len(msg.items) > 0 {
 				m.activeAgentID = msg.items[0].ID
@@ -1670,11 +1666,8 @@ func (m *model) renderFooter() string {
 		}
 		left += mc.Render(" " + modeLabel(m.activeMode))
 	}
-	if m.localExec {
-		left += lipgloss.NewStyle().Foreground(t.Accent2).Bold(true).Render(" LOCAL")
-		if m.localYolo {
-			left += lipgloss.NewStyle().Foreground(t.Bad).Bold(true).Render("  YOLO")
-		}
+	if m.localYolo {
+		left += lipgloss.NewStyle().Foreground(t.Bad).Bold(true).Render(" YOLO")
 	}
 	help := t.Help.Render(m.contextHelp() + " ")
 	gap := max(1, m.width-lipgloss.Width(left)-lipgloss.Width(help))

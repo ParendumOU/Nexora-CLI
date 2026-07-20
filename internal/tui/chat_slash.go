@@ -25,10 +25,9 @@ var slashCmds = []slashCmd{
 	{"/usage", "show this chat's token/tool usage (sidebar)", false},
 	{"/agents", "show the chat's agent hierarchy tree (sidebar)", false},
 	{"/info", "show chat info (id, counts) in the sidebar", false},
-	{"/local", "toggle running shell/file tools on THIS machine", false},
-	{"/yolo", "toggle auto-approve for local commands (no prompt)", false},
-	{"/cd", "set the host working dir for local exec", true},
-	{"/pwd", "show the host working dir for local exec", false},
+	{"/yolo", "toggle auto-approve for commands (no prompt)", false},
+	{"/cd", "set the host working dir for commands", true},
+	{"/pwd", "show the host working dir for commands", false},
 	{"/clearagent", "detach the agent (general chat)", false},
 	{"/help", "show available commands", false},
 }
@@ -58,7 +57,7 @@ func (m *model) runSlash(line string) (tea.Model, tea.Cmd) {
 
 	switch cmd {
 	case "/help", "/?":
-		m.status = "/new /agent /model /chain /copy /clearagent /local /yolo /cd /pwd · ctrl+p pick-msg · ctrl+y copy · pgup/pgdn scroll"
+		m.status = "/new /agent /model /chain /copy /clearagent /yolo /cd /pwd · ctrl+p pick-msg · ctrl+y copy · pgup/pgdn scroll"
 		return m, nil
 
 	case "/copy":
@@ -147,22 +146,7 @@ func (m *model) runSlash(line string) (tea.Model, tea.Cmd) {
 		m.openChainPicker()
 		return m, nil
 
-	case "/local":
-		m.localExec = !m.localExec
-		if m.localExec {
-			m.status = "⚡ LOCAL EXEC ON — current agent's shell/file tools run in " + m.localCwd + " (/yolo to auto-approve · /agent to switch · Local Operator = built-in direct agent)"
-		} else {
-			m.localYolo = false
-			m.status = "local exec OFF — tools run in the server container"
-		}
-		m.persistLocal()
-		return m, nil
-
 	case "/yolo":
-		if !m.localExec {
-			m.status = "enable /local first"
-			return m, nil
-		}
 		m.localYolo = !m.localYolo
 		if m.localYolo {
 			m.status = "⚠ YOLO ON — local commands auto-run WITHOUT confirmation"

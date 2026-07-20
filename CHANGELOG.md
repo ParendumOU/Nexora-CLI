@@ -3,6 +3,13 @@
 All notable changes to NexoraCLI. Newest first; one `## <version>` heading per release.
 The release CI extracts the section matching the pushed tag as the GitHub Release notes.
 
+## 0.9.0
+
+- The agent's shell and file tools now always run on the host where the CLI runs, never on the Nexora server. Local execution is the default and only behavior.
+- Removed the --local-exec flag and the /local command. There is no local/remote toggle anymore.
+- The --yolo flag and /yolo command remain: they control whether write and shell commands auto-run or ask for confirmation first. Without yolo you still confirm each write or shell command.
+- The status bar no longer shows a LOCAL chip; only YOLO is shown when auto-approve is on.
+
 ## 0.8.0
 
 - Reflects per-member provider governance set by your admin. The Providers tab shows only the accounts you may use, with a clear empty state when your admin has not assigned you any.
