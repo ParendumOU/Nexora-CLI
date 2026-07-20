@@ -197,10 +197,4 @@ Drop a star — it helps other terminal-dwellers find Nexora. New to the platfor
 
 ## Star history
 
-<a href="https://www.star-history.com/?repos=ParendumOU%2FNexora-CLI&type=date&legend=top-left">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=ParendumOU/Nexora-CLI&type=date&theme=dark&legend=top-left" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=ParendumOU/Nexora-CLI&type=date&legend=top-left" />
-    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=ParendumOU/Nexora-CLI&type=date&legend=top-left" />
-  </picture>
-</a>
+[![Star History Chart](https://api.star-history.com/chart?repos=ParendumOU/Nexora-CLI&type=date&legend=top-left&sealed_token=kOtrenVdFwCIs0bOd9ml3FZ3HsMolCcQb_9AmVzzEx28ej1V0oS_Zc8w7k4QfHrxBOYF4OZdMAXbRlZ9FR47neuWbnVfYtPYStMKiYD7_XdMBpwL1Vzlp-E3np0SKtO1YT-9jk5r6g9Hahv_Gjvkp9osCvcEc02DXzRzDd6w7qGUwZaxxVSDK_1aasvo)](https://www.star-history.com/?repos=ParendumOU%2FNexora-CLI&type=date&legend=top-left)
