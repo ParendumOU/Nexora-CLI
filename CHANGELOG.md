@@ -3,6 +3,11 @@
 All notable changes to NexoraCLI. Newest first; one `## <version>` heading per release.
 The release CI extracts the section matching the pushed tag as the GitHub Release notes.
 
+## 0.7.2
+
+- Fixed a bug where switching between chats (or a single reconnect) could put the chat into a rapid connect and disconnect loop, so new messages were never answered. Closing the previous chat socket no longer triggers a spurious reconnect of the current one.
+- Stream frames and close events from a chat socket that has already been replaced are now ignored, so they can no longer render onto the wrong chat or restart a dead reader.
+
 ## 0.7.1
 
 - The chat WebSocket now reconnects with capped exponential backoff (1s, 2s, 4s up to 30s) instead of retrying every second forever, so a persistent connection failure no longer floods the server with reconnect attempts.

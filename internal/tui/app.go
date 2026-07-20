@@ -253,6 +253,10 @@ type model struct {
 	intSel        int                // cursor in the Integrations settings subtab
 	reconnecting  bool              // a WS reconnect loop is in progress
 	reconnectN    int               // backoff attempt counter
+	wsGen         int               // generation of the live ws.events channel; frames/close
+	//                                 events tagged with a stale generation (from a socket we
+	//                                 already replaced via closeWS) are ignored, so closing an
+	//                                 old socket never triggers a spurious reconnect of the new one
 	chatStack     []*api.Chat         // back-stack for sub-chat navigation (parent ← sub)
 	subSel        int                 // cursor in the Sub-agents sidebar panel
 	subChats      []api.HierarchyNode // descendant sub-chats of the current chat (fetched)
@@ -502,8 +506,13 @@ type wsReadyMsg struct {
 	events chan ws.Frame
 	msgs   []api.Message
 }
-type wsFrameMsg struct{ f ws.Frame }
-type wsClosedMsg struct{}
+type wsFrameMsg struct {
+	f   ws.Frame
+	gen int // generation of the events channel this frame came from
+}
+type wsClosedMsg struct {
+	gen int // generation of the events channel that closed
+}
 type sentMsg struct{}
 
 // ── load commands ───────────────────────────────────────────────────────────────
@@ -789,13 +798,13 @@ func (m *model) newChat(agentID, title string) tea.Cmd {
 		return open(chat)()
 	}
 }
-func waitForFrame(ch chan ws.Frame) tea.Cmd {
+func waitForFrame(ch chan ws.Frame, gen int) tea.Cmd {
 	return func() tea.Msg {
 		f, ok := <-ch
 		if !ok {
-			return wsClosedMsg{}
+			return wsClosedMsg{gen: gen}
 		}
-		return wsFrameMsg{f}
+		return wsFrameMsg{f: f, gen: gen}
 	}
 }
 
@@ -1260,6 +1269,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.currentChat = msg.chat
 		m.wsClient = msg.client
 		m.events = msg.events
+		m.wsGen++ // new live channel — invalidate any pending frames/close from the old one
 		m.messages = msg.msgs
 		m.assistantBuf = ""
 		m.toolActions = nil
@@ -1268,7 +1278,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.activeTab = tabChat
 		m.input.Focus()
 		m.subChats = nil
-		cmds := []tea.Cmd{waitForFrame(m.events), m.loadTasks(msg.chat.ID), m.loadHierarchy(msg.chat.ID), textinput.Blink}
+		cmds := []tea.Cmd{waitForFrame(m.events, m.wsGen), m.loadTasks(msg.chat.ID), m.loadHierarchy(msg.chat.ID), textinput.Blink}
 		// flush a queued first message (general-chat "type to start" flow)
 		if m.pendingSend != "" {
 			content := m.pendingSend
@@ -1283,8 +1293,21 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.renderTranscript()
 		return m, tea.Batch(cmds...)
 	case wsFrameMsg:
+		// Drop frames from a superseded channel (a socket we already replaced via
+		// closeWS on chat-switch/reconnect). Acting on them would render onto the
+		// wrong chat and re-arm a dead reader.
+		if msg.gen != m.wsGen {
+			return m, nil
+		}
 		return m.handleFrame(msg.f)
 	case wsClosedMsg:
+		// Ignore the close of a superseded socket. Without this, closeWS() closing an
+		// old client makes its pending waitForFrame deliver wsClosedMsg, which used to
+		// kick off a reconnect that closed the freshly-installed socket — a compounding
+		// connect/close storm. Only the CURRENT channel closing means a real drop.
+		if msg.gen != m.wsGen {
+			return m, nil
+		}
 		m.streaming = false
 		// NOTE: don't flip the connection dot here — that tracks API reachability, not the
 		// chat WebSocket (which may be absent when no chat is open). WS reconnect is shown
@@ -1329,6 +1352,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.closeWS()
 		m.wsClient = msg.client
 		m.events = msg.events
+		m.wsGen++ // new live channel — invalidate the old one's pending frames/close
 		m.connected = true
 		m.reconnecting = false
 		m.reconnectN = 0
@@ -1338,7 +1362,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.rebuildBlocks()
 			m.renderTranscript()
 		}
-		return m, waitForFrame(m.events)
+		return m, waitForFrame(m.events, m.wsGen)
 	case sentMsg:
 		return m, nil
 	}

@@ -398,7 +398,7 @@ func (m *model) rebuildBlocks() {
 }
 
 func (m *model) handleFrame(f ws.Frame) (tea.Model, tea.Cmd) {
-	rearm := waitForFrame(m.events)
+	rearm := waitForFrame(m.events, m.wsGen)
 	switch f.Type {
 	case "user_message":
 		// A message posted to this chat — show it live. Skip ONLY our own echo (matched by
