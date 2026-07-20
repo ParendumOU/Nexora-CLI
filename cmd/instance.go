@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"gitlab.com/parendum/nexora/nexora-cli/internal/config"
 )
 
 func init() {
-	instanceCmd.AddCommand(instanceListCmd, instanceUseCmd)
+	instanceCmd.AddCommand(instanceListCmd, instanceUseCmd, instanceDeleteCmd)
 	rootCmd.AddCommand(instanceCmd)
 }
 
@@ -57,6 +58,44 @@ var instanceUseCmd = &cobra.Command{
 			return err
 		}
 		fmt.Printf("Switched to %q.\n", args[0])
+		return nil
+	},
+}
+
+var instanceDeleteCmd = &cobra.Command{
+	Use:     "delete <name>",
+	Aliases: []string{"rm", "remove"},
+	Short:   "Delete a saved instance (removes its URL + tokens from the local config).",
+	Args:    cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cfg, err := config.Load()
+		if err != nil {
+			return err
+		}
+		// Instance names are stored normalized (trimmed + lowercased); match that on lookup.
+		name := strings.TrimSpace(strings.ToLower(args[0]))
+		if _, ok := cfg.Instances[name]; !ok {
+			return fmt.Errorf("no instance named %q", args[0])
+		}
+		delete(cfg.Instances, name)
+		// If we removed the active instance, pick another one (if any) so `current`
+		// never points at a deleted entry.
+		if cfg.Current == name {
+			cfg.Current = ""
+			for other := range cfg.Instances {
+				cfg.Current = other
+				break
+			}
+		}
+		if err := cfg.Save(); err != nil {
+			return err
+		}
+		fmt.Printf("Deleted instance %q.\n", name)
+		if cfg.Current != "" {
+			fmt.Printf("Active instance is now %q.\n", cfg.Current)
+		} else if len(cfg.Instances) == 0 {
+			fmt.Println("No instances left. Run `nexora login` or `nexora pair`.")
+		}
 		return nil
 	},
 }

@@ -3,6 +3,11 @@
 All notable changes to NexoraCLI. Newest first; one `## <version>` heading per release.
 The release CI extracts the section matching the pushed tag as the GitHub Release notes.
 
+## 0.7.0
+
+- New "nexora instance delete <name>" command (aliases rm, remove) removes a saved instance and its tokens from the local config.
+- Deleting the active instance reassigns the current selection to another saved one, or clears it when none are left.
+
 ## 0.6.0
 
 - New "nexora join" command redeems an organization invite in one step: it creates or signs in your account, pairs this terminal, and saves the instance, with no manual login.
