@@ -285,6 +285,10 @@ type Me struct {
 	Notes          string `json:"notes"`        // AI memory
 	ContactInfo    string `json:"contact_info"` // JSON array of {label,value}
 	IsSuperuser    bool   `json:"is_superuser"`
+	// Per-member LLM-provider governance in the active org (read-only reflection).
+	// ProviderMode is all|own|assigned; empty = not a governed member.
+	ProviderMode          string `json:"provider_mode"`
+	AssignedProviderCount int    `json:"assigned_provider_count"`
 }
 
 // ── effective permissions / governance (GET /permissions/me) ─────────────────
@@ -506,6 +510,19 @@ type Org struct {
 	Role        string `json:"role"`
 	IsPersonal  bool   `json:"is_personal"`
 	MemberCount int    `json:"member_count"`
+}
+
+// Member is one org-member row (GET /orgs/{org_id}/members). ProviderMode is the
+// per-member LLM-provider governance an org admin sets (all|own|assigned); it is
+// read-only to the member. AssignedProviderCount is how many provider accounts are
+// reserved to this member.
+type Member struct {
+	UserID                string `json:"user_id"`
+	FullName              string `json:"full_name"`
+	Email                 string `json:"email"`
+	Role                  string `json:"role"`
+	ProviderMode          string `json:"provider_mode"`
+	AssignedProviderCount int    `json:"assigned_provider_count"`
 }
 
 // ── usage ──────────────────────────────────────────────────────────────────────

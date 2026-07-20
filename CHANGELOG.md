@@ -3,6 +3,12 @@
 All notable changes to NexoraCLI. Newest first; one `## <version>` heading per release.
 The release CI extracts the section matching the pushed tag as the GitHub Release notes.
 
+## 0.8.0
+
+- Reflects per-member provider governance set by your admin. The Providers tab shows only the accounts you may use, with a clear empty state when your admin has not assigned you any.
+- The Account settings subtab shows your provider access mode (All accounts, Own accounts, or Assigned only) and how many accounts are reserved to you, read-only.
+- When you have no usable provider accounts, a turn now fails with a clear message telling you to contact your admin, instead of appearing to hang.
+
 ## 0.7.2
 
 - Fixed a bug where switching between chats (or a single reconnect) could put the chat into a rapid connect and disconnect loop, so new messages were never answered. Closing the previous chat socket no longer triggers a spurious reconnect of the current one.

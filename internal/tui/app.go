@@ -186,6 +186,12 @@ type model struct {
 	usage         *api.UsageSummary
 	me            *api.Me
 	perms         *api.Permissions // effective policy (nil until loaded → fail open)
+	// per-member LLM-provider governance in the active org (read-only reflection;
+	// admin-set on the web). providerMode is all|own|assigned; providerPolicyOK is
+	// false until it has been read at least once.
+	providerMode     string
+	providerAssigned int
+	providerPolicyOK bool
 	mktKeySet     bool
 	backupJobID   string
 	backupStatus  string
@@ -492,12 +498,20 @@ type logsMsg struct{ items []api.LogEntry }
 type notesMsg struct{ items []api.ChatNote }
 type chatFilesMsg struct{ items []api.ChatFile }
 type settingsMsg struct {
-	me      *api.Me
-	orgs    []api.Org
-	usage   *api.UsageSummary
-	devices []api.Device
-	mktKey  bool
-	envVars []api.EnvVar
+	me           *api.Me
+	orgs         []api.Org
+	usage        *api.UsageSummary
+	devices      []api.Device
+	mktKey       bool
+	envVars      []api.EnvVar
+	provMode     string // caller's provider governance mode ("" = unknown)
+	provAssigned int
+}
+
+type providerPolicyMsg struct {
+	mode     string
+	assigned int
+	ok       bool
 }
 type backupTickMsg struct{ job *api.BackupJob }
 type wsReadyMsg struct {
@@ -761,7 +775,31 @@ func (m *model) loadSettings() tea.Cmd {
 		devs, _ := c.ListDevices(context.Background())
 		mktKey, _ := c.MarketplaceKeyConfigured(context.Background())
 		evs, _ := c.ListEnvVars(context.Background())
-		return settingsMsg{me: me, orgs: orgs, usage: u, devices: devs, mktKey: mktKey, envVars: evs}
+		pMode, pAssigned := "", 0
+		if me != nil {
+			pMode, pAssigned = me.ProviderMode, me.AssignedProviderCount
+			if pMode == "" {
+				pMode = "all"
+			}
+		}
+		return settingsMsg{me: me, orgs: orgs, usage: u, devices: devs, mktKey: mktKey, envVars: evs, provMode: pMode, provAssigned: pAssigned}
+	}
+}
+
+// loadProviderPolicy fetches just the caller's provider governance for the active
+// org (lightweight — used by the Providers tab, which does not load full settings).
+func (m *model) loadProviderPolicy() tea.Cmd {
+	c := m.client
+	return func() tea.Msg {
+		me, err := c.Me(context.Background())
+		if err != nil || me == nil {
+			return nil
+		}
+		mode := me.ProviderMode
+		if mode == "" {
+			mode = "all"
+		}
+		return providerPolicyMsg{mode: mode, assigned: me.AssignedProviderCount, ok: true}
 	}
 }
 
@@ -1237,7 +1275,23 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.devices = msg.devices
 		m.mktKeySet = msg.mktKey
 		m.envVars = msg.envVars
+		if msg.provMode != "" {
+			m.providerMode = msg.provMode
+			m.providerAssigned = msg.provAssigned
+			m.providerPolicyOK = true
+		}
 		m.settingsVP.SetContent(m.settingsContent())
+		return m, nil
+	case providerPolicyMsg:
+		if msg.ok {
+			m.connected = true
+			m.providerMode = msg.mode
+			m.providerAssigned = msg.assigned
+			m.providerPolicyOK = true
+			if m.activeTab == tabSettings {
+				m.settingsVP.SetContent(m.settingsContent())
+			}
+		}
 		return m, nil
 	case backupTickMsg:
 		if msg.job != nil {
@@ -1480,7 +1534,7 @@ func (m *model) onTabChange() tea.Cmd {
 	case tabSessions:
 		return m.loadChats()
 	case tabProviders:
-		return tea.Batch(m.loadProviders(), m.loadProviderTypes())
+		return tea.Batch(m.loadProviders(), m.loadProviderTypes(), m.loadProviderPolicy())
 	case tabKB:
 		if m.currentKB != nil {
 			return m.loadKBFiles(m.currentKB.ID)
@@ -1501,7 +1555,7 @@ func (m *model) onTabChange() tea.Cmd {
 		}
 		return m.loadMarket(m.marketQuery)
 	case tabSettings:
-		return tea.Batch(m.loadSettings(), m.loadMe())
+		return tea.Batch(m.loadSettings(), m.loadMe(), m.loadProviderPolicy())
 	}
 	return nil
 }

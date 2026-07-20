@@ -102,13 +102,30 @@ func (m *model) openProviderForm(pt api.ProviderType) {
 	m.form = newForm("provider_new:"+pt.Key, "Add "+pt.Name, fields)
 }
 
+// providerGoverned reports whether an org admin has restricted the caller's provider
+// access (mode "own" or "assigned"). "all" (the default, and every owner/admin) is
+// unrestricted, so an empty list then just means no accounts are configured yet.
+func (m *model) providerGoverned() bool {
+	return m.providerPolicyOK && m.providerMode != "" && m.providerMode != "all"
+}
+
 func (m *model) viewProviders() string {
+	t := m.theme
 	if len(m.providers) == 0 {
-		hint := "No providers.  [n] add one.\n\n" +
-			m.theme.Help.Render("Providers supply the LLM credentials your agents use.")
+		var hint string
+		if m.providerGoverned() {
+			hint = "No provider accounts available to you.\n\n" +
+				t.Help.Render("Your organization admin assigns the provider accounts you can use.")
+		} else {
+			hint = "No providers.  [n] add one.\n\n" +
+				t.Help.Render("Providers supply the LLM credentials your agents use.")
+		}
 		return lipgloss.NewStyle().Padding(1, 2).Render(hint)
 	}
 	body := m.providerList.View()
+	if m.providerGoverned() {
+		body += "\n" + t.Help.Render("Provider accounts your organization admin has made available to you.")
+	}
 	if len(m.chains) > 0 {
 		body += "\n" + m.theme.StatusBar.Render("fallback chains: ")
 		for _, ch := range m.chains {

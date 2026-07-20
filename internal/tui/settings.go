@@ -262,6 +262,15 @@ func (m *model) viewSetAccount() string {
 		}
 		b.WriteString(marker + name + "  " + t.Help.Render("("+tag+", "+itoa(o.MemberCount)+" members)") + "\n")
 	}
+	if m.providerPolicyOK {
+		b.WriteString("\n" + t.AgentName.Render("Provider access") + "  " + t.Help.Render("(managed by your org admin)") + "\n")
+		line := "  " + providerModeLabel(m.providerMode)
+		if m.providerAssigned > 0 {
+			line += "  " + t.Help.Render("("+itoa(m.providerAssigned)+" account(s) assigned to you)")
+		}
+		b.WriteString(line + "\n")
+	}
+
 	keyState := "not set"
 	if m.mktKeySet {
 		keyState = "configured"
@@ -269,6 +278,18 @@ func (m *model) viewSetAccount() string {
 	b.WriteString("\n" + t.AgentName.Render("Marketplace") + "  " + t.Help.Render("[k] set API key") + "\n")
 	b.WriteString("  api key: " + keyState + "  " + t.Help.Render("(needed for private packages)"))
 	return b.String()
+}
+
+// providerModeLabel renders the read-only per-member provider-governance mode.
+func providerModeLabel(mode string) string {
+	switch mode {
+	case "assigned":
+		return "Assigned only"
+	case "own":
+		return "Own accounts"
+	default:
+		return "All accounts"
+	}
 }
 
 func (m *model) viewSetUsage() string {

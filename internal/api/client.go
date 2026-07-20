@@ -984,6 +984,34 @@ func (c *Client) ListOrgs(ctx context.Context) ([]Org, error) {
 	return out, err
 }
 
+// ListMembers returns the members of an org. Any member may call it (not admin-only),
+// which lets a governed member read their own provider_mode via MyProviderPolicy.
+func (c *Client) ListMembers(ctx context.Context, orgID string) ([]Member, error) {
+	var out []Member
+	err := c.do(ctx, http.MethodGet, "/orgs/"+url.PathEscape(orgID)+"/members", nil, &out)
+	return out, err
+}
+
+// MyProviderPolicy reports the caller's LLM-provider governance in the active org:
+// the mode (all|own|assigned) and how many accounts are reserved to them. It matches
+// the caller in the members list by user id. A returned mode of "" means the policy
+// could not be determined (no active org, unknown user, or the caller is not a
+// member) — callers treat that as "unknown / not governed".
+// MyProviderPolicy reads the caller's own provider governance from /users/me
+// (provider_mode + assigned account count for the active org). No org-membership
+// listing needed, so a restricted member never has to enumerate colleagues.
+func (c *Client) MyProviderPolicy(ctx context.Context) (mode string, assigned int, err error) {
+	me, err := c.Me(ctx)
+	if err != nil {
+		return "", 0, err
+	}
+	mode = me.ProviderMode
+	if mode == "" {
+		mode = "all"
+	}
+	return mode, me.AssignedProviderCount, nil
+}
+
 func (c *Client) SwitchOrg(ctx context.Context, orgID string) error {
 	var tr TokenResponse
 	if err := c.do(ctx, http.MethodPost, "/orgs/switch", map[string]string{"org_id": orgID}, &tr); err != nil {
