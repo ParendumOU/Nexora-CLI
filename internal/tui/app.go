@@ -811,10 +811,23 @@ type wsReconnectedMsg struct {
 	msgs   []api.Message
 }
 
-// reconnectTick schedules the next reconnect attempt: a fixed 1s interval, retried
-// indefinitely until the socket comes back (no backoff, no cap).
-func reconnectTick(chat *api.Chat) tea.Cmd {
-	return tea.Tick(time.Second, func(time.Time) tea.Msg {
+// reconnectTick schedules the next reconnect attempt using capped exponential
+// backoff (1s, 2s, 4s ... capped at 30s), retried indefinitely until the socket
+// comes back. Backoff keeps a persistent failure from turning into a once-a-second
+// reconnect storm that hammers the server's per-IP WS connection limit.
+func reconnectTick(chat *api.Chat, attempt int) tea.Cmd {
+	if attempt < 0 {
+		attempt = 0
+	}
+	shift := attempt
+	if shift > 5 {
+		shift = 5
+	}
+	delay := time.Second << uint(shift)
+	if delay > 30*time.Second {
+		delay = 30 * time.Second
+	}
+	return tea.Tick(delay, func(time.Time) tea.Msg {
 		return reconnectAttemptMsg{chat: chat}
 	})
 }
@@ -1287,7 +1300,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.reconnecting = true
 		m.reconnectN = 0
 		m.status = "reconnecting…"
-		return m, reconnectTick(m.currentChat)
+		return m, reconnectTick(m.currentChat, m.reconnectN)
 	case authExpiredMsg:
 		// refresh token rejected (e.g. password changed → token_version bumped). No amount
 		// of retrying helps; tell the user to re-authenticate and stop the reconnect loop.
@@ -1307,7 +1320,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.reconnectN++
 		m.status = "reconnecting… (retry " + itoa(m.reconnectN) + ")"
-		return m, reconnectTick(m.currentChat)
+		return m, reconnectTick(m.currentChat, m.reconnectN)
 	case wsReconnectedMsg:
 		if m.currentChat == nil || msg.chatID != m.currentChat.ID {
 			_ = msg.client.Close()

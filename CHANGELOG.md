@@ -3,6 +3,10 @@
 All notable changes to NexoraCLI. Newest first; one `## <version>` heading per release.
 The release CI extracts the section matching the pushed tag as the GitHub Release notes.
 
+## 0.7.1
+
+- The chat WebSocket now reconnects with capped exponential backoff (1s, 2s, 4s up to 30s) instead of retrying every second forever, so a persistent connection failure no longer floods the server with reconnect attempts.
+
 ## 0.7.0
 
 - New "nexora instance delete <name>" command (aliases rm, remove) removes a saved instance and its tokens from the local config.
