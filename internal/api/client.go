@@ -319,9 +319,13 @@ func (c *Client) setTokens(access, refresh string) {
 
 // ── agents ──────────────────────────────────────────────────────────────────────
 
+// ListAgents returns the agents the caller may USE in chat (their capability-allowed
+// set; all active agents when unrestricted). It hits /agents/assignable, which is not
+// gated by agents.view, so a locked-down member can still auto-select and switch among
+// their assigned agents. Managing agents (create/update/delete) stays gated separately.
 func (c *Client) ListAgents(ctx context.Context) ([]Agent, error) {
 	var out []Agent
-	err := c.do(ctx, http.MethodGet, "/agents?limit=500", nil, &out)
+	err := c.do(ctx, http.MethodGet, "/agents/assignable", nil, &out)
 	return out, err
 }
 
@@ -657,6 +661,18 @@ func (c *Client) Me(ctx context.Context) (*Me, error) {
 	var out Me
 	err := c.do(ctx, http.MethodGet, "/users/me", nil, &out)
 	return &out, err
+}
+
+// SetPassword sets or changes the account password. current may be empty for a
+// passwordless (CLI-onboarded) account setting its first password; an account that
+// already has one must pass the correct current password. On success the account can
+// also sign in on the web.
+func (c *Client) SetPassword(ctx context.Context, current, newPassword string) error {
+	body := map[string]string{"new_password": newPassword}
+	if current != "" {
+		body["current_password"] = current
+	}
+	return c.do(ctx, http.MethodPatch, "/users/me/password", body, nil)
 }
 
 // GetMyPermissions returns the caller's effective policy in the active org

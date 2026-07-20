@@ -285,6 +285,10 @@ type Me struct {
 	Notes          string `json:"notes"`        // AI memory
 	ContactInfo    string `json:"contact_info"` // JSON array of {label,value}
 	IsSuperuser    bool   `json:"is_superuser"`
+	IsManaged      bool   `json:"is_managed"`
+	// HasPassword is false for passwordless (CLI-onboarded) accounts until the user sets
+	// one via `nexora set-password`, after which they can also sign in on the web.
+	HasPassword bool `json:"has_password"`
 	// Per-member LLM-provider governance in the active org (read-only reflection).
 	// ProviderMode is all|own|assigned; empty = not a governed member.
 	ProviderMode          string `json:"provider_mode"`

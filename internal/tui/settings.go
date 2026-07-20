@@ -271,6 +271,15 @@ func (m *model) viewSetAccount() string {
 		b.WriteString(line + "\n")
 	}
 
+	if m.me != nil {
+		b.WriteString("\n" + t.AgentName.Render("Web sign-in") + "\n")
+		if m.me.HasPassword {
+			b.WriteString("  enabled  " + t.Help.Render("(sign in with "+m.me.Email+" · `nexora set-password` to change it)") + "\n")
+		} else {
+			b.WriteString("  not enabled  " + t.Help.Render("(ask your org admin to enable web sign-in)") + "\n")
+		}
+	}
+
 	keyState := "not set"
 	if m.mktKeySet {
 		keyState = "configured"

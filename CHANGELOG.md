@@ -3,6 +3,12 @@
 All notable changes to NexoraCLI. Newest first; one `## <version>` heading per release.
 The release CI extracts the section matching the pushed tag as the GitHub Release notes.
 
+## 0.11.0
+
+- New "nexora set-password" command changes your password from the terminal, so you can also sign in on the web. Accounts created from a terminal invite have no password until an organization owner or admin enables web sign-in and gives you the generated one.
+- Settings, Account now shows whether web sign-in is enabled for your account.
+- The agent picker and auto-selection now use the agents assigned to you, so members without the agents permission can still work with the agents their admin assigned instead of seeing nothing.
+
 ## 0.10.1
 
 - The /agents hierarchy command now requires the agents permission, matching the Agents tab, so it no longer appears in autocomplete or /help for users without it.
