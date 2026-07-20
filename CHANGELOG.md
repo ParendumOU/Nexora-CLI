@@ -3,6 +3,12 @@
 All notable changes to NexoraCLI. Newest first; one `## <version>` heading per release.
 The release CI extracts the section matching the pushed tag as the GitHub Release notes.
 
+## 0.10.1
+
+- The /agents hierarchy command now requires the agents permission, matching the Agents tab, so it no longer appears in autocomplete or /help for users without it.
+- Chat side panels now respect permissions: the Agents panel needs the agents permission and the Tasks and Plan panels need the tasks permission. Panels you cannot see are no longer reachable with ctrl+o or shown when a sub-agent spawns.
+- Fixed the command palette New chat action opening the Agents screen instead of starting a chat.
+
 ## 0.10.0
 
 - Slash commands now respect your organization permissions and interface mode. Commands you are not allowed to use no longer appear in the autocomplete or the /help list and are rejected if typed. /usage needs the advanced interface; /chain needs the providers permission.

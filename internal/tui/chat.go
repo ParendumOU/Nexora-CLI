@@ -457,6 +457,7 @@ func (m *model) handleFrame(f ws.Frame) (tea.Model, tea.Cmd) {
 		if !m.sidebarOpen {
 			m.sidebarOpen = true
 			m.sidebarPanel = panTree
+			m.clampPanel() // fall back if the caller can't see the Agents panel
 			m.layout()
 		}
 		m.renderTranscript()
@@ -785,16 +786,36 @@ var sidebarPanels = []string{"Agents", "Tasks", "Plan", "Notes", "Files", "Logs"
 // agent tree + task tree, drop the advanced-only panels).
 var simplePanels = []int{panTree, panTasks, panInfo}
 
-// visiblePanels returns the sidebar panel indices available for the current UI mode.
+// panelPerm maps a sidebar panel to the permission key it needs. Panels absent from the
+// map (Notes/Files/Logs/Usage/Info) are chat-scoped and always available. Mirrors the
+// tab gating so a panel the caller can't see is neither shown nor reachable via ctrl+o.
+var panelPerm = map[int]string{
+	panTree:  "agents.view",
+	panTasks: "tasks.view",
+	panPlan:  "tasks.view",
+}
+
+// visiblePanels returns the sidebar panel indices available for the current UI mode,
+// filtered by the caller's permissions.
 func (m *model) visiblePanels() []int {
+	src := make([]int, 0, len(sidebarPanels))
 	if m.uiMode == "simple" {
-		return simplePanels
+		src = append(src, simplePanels...)
+	} else {
+		for i := range sidebarPanels {
+			src = append(src, i)
+		}
 	}
-	all := make([]int, len(sidebarPanels))
-	for i := range sidebarPanels {
-		all[i] = i
+	out := make([]int, 0, len(src))
+	for _, p := range src {
+		if m.can(panelPerm[p]) {
+			out = append(out, p)
+		}
 	}
-	return all
+	if len(out) == 0 {
+		out = append(out, panInfo)
+	}
+	return out
 }
 
 // clampPanel snaps the active panel to the first visible one if it's hidden in this mode.

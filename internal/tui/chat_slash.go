@@ -28,7 +28,7 @@ var slashCmds = []slashCmd{
 	{name: "/chain", desc: "set the provider chain (picker)", perm: "providers.view"},
 	{name: "/copy", desc: "copy the last reply to clipboard"},
 	{name: "/usage", desc: "show this chat's token/tool usage (sidebar)", adv: true},
-	{name: "/agents", desc: "show the chat's agent hierarchy tree (sidebar)"},
+	{name: "/agents", desc: "show the chat's agent hierarchy tree (sidebar)", perm: "agents.view"},
 	{name: "/info", desc: "show chat info (id, counts) in the sidebar"},
 	{name: "/yolo", desc: "toggle auto-approve for commands (no prompt)"},
 	{name: "/cd", desc: "set the host working dir for commands", arg: true},

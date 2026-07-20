@@ -95,7 +95,10 @@ func (m *model) runPaletteAction(id string) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	switch id {
-	case "new", "agents":
+	case "new":
+		m.activeTab = tabChat
+		return m.runSlash("/new")
+	case "agents":
 		m.activeTab = tabAgents
 		return m, m.loadAgents()
 	case "sessions":
