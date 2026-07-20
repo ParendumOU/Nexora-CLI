@@ -3,6 +3,12 @@
 All notable changes to NexoraCLI. Newest first; one `## <version>` heading per release.
 The release CI extracts the section matching the pushed tag as the GitHub Release notes.
 
+## 0.10.0
+
+- Slash commands now respect your organization permissions and interface mode. Commands you are not allowed to use no longer appear in the autocomplete or the /help list and are rejected if typed. /usage needs the advanced interface; /chain needs the providers permission.
+- The CLI no longer exits on Ctrl+C. Type /quit or /exit to leave. Ctrl+C shows a reminder instead of closing.
+- Ctrl+Z no longer suspends the CLI to the background.
+
 ## 0.9.0
 
 - The agent's shell and file tools now always run on the host where the CLI runs, never on the Nexora server. Local execution is the default and only behavior.

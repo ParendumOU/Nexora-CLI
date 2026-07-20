@@ -172,7 +172,7 @@ func (m *model) updateChat(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // refreshSlash recomputes the slash-autocomplete popup from the current input.
 func (m *model) refreshSlash() {
-	m.slashHits = slashMatches(m.input.Value())
+	m.slashHits = m.slashMatches(m.input.Value())
 	m.slashOpen = len(m.slashHits) > 0
 	if m.slashIdx >= len(m.slashHits) {
 		m.slashIdx = 0

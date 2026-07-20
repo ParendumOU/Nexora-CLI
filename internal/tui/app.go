@@ -1003,8 +1003,10 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		switch msg.String() {
 		case "ctrl+c":
-			m.cleanup()
-			return m, tea.Quit
+			m.status = "type /quit or /exit to leave"
+			return m, nil
+		case "ctrl+z":
+			return m, nil
 		case "ctrl+k":
 			m.paletteOpen = true
 			return m, nil
@@ -1042,7 +1044,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.connected = true
 			if ae.Status == 401 {
 				// token rejected and refresh couldn't recover (e.g. password changed)
-				m.status = "Session expired — quit (ctrl+c) and run `nexora login` to re-authenticate"
+				m.status = "Session expired — quit (/quit) and run `nexora login` to re-authenticate"
 			} else {
 				m.status = ae.Error()
 			}
@@ -1378,7 +1380,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// refresh token rejected (e.g. password changed → token_version bumped). No amount
 		// of retrying helps; tell the user to re-authenticate and stop the reconnect loop.
 		m.reconnecting = false
-		m.status = "Session expired — quit (ctrl+c) and run `nexora login` to re-authenticate"
+		m.status = "Session expired — quit (/quit) and run `nexora login` to re-authenticate"
 		return m, nil
 	case reconnectAttemptMsg:
 		if m.currentChat == nil || msg.chat.ID != m.currentChat.ID {
@@ -1733,7 +1735,7 @@ func (m *model) contextHelp() string {
 	case tabTasks:
 		return "tasks for current chat · board tab = kanban · [tab] [ctrl+k]"
 	default:
-		return "[tab] switch  [ctrl+k] palette  [ctrl+c] quit"
+		return "[tab] switch  [ctrl+k] palette  /quit exit"
 	}
 }
 

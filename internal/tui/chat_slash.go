@@ -10,31 +10,68 @@ import (
 	"gitlab.com/parendum/nexora/nexora-cli/internal/api"
 )
 
-// slashCmd is one in-composer command shown in the autocomplete popup.
+// slashCmd is one in-composer command shown in the autocomplete popup. adv marks a
+// command that needs the advanced interface mode; perm is a permission key the caller
+// must hold (empty = none). Both mirror the tab/panel gating so a command hidden from
+// the menu can't be reached via the composer either.
 type slashCmd struct {
 	name, desc string
-	arg        bool // takes a free-text argument
+	arg        bool
+	adv        bool
+	perm       string
 }
 
 var slashCmds = []slashCmd{
-	{"/new", "start a fresh chat", false},
-	{"/agent", "attach / switch the agent (picker)", false},
-	{"/model", "set the model for this chat", true},
-	{"/chain", "set the provider chain (picker)", false},
-	{"/copy", "copy the last reply to clipboard", false},
-	{"/usage", "show this chat's token/tool usage (sidebar)", false},
-	{"/agents", "show the chat's agent hierarchy tree (sidebar)", false},
-	{"/info", "show chat info (id, counts) in the sidebar", false},
-	{"/yolo", "toggle auto-approve for commands (no prompt)", false},
-	{"/cd", "set the host working dir for commands", true},
-	{"/pwd", "show the host working dir for commands", false},
-	{"/clearagent", "detach the agent (general chat)", false},
-	{"/help", "show available commands", false},
+	{name: "/new", desc: "start a fresh chat"},
+	{name: "/agent", desc: "attach / switch the agent (picker)"},
+	{name: "/model", desc: "set the model for this chat", arg: true},
+	{name: "/chain", desc: "set the provider chain (picker)", perm: "providers.view"},
+	{name: "/copy", desc: "copy the last reply to clipboard"},
+	{name: "/usage", desc: "show this chat's token/tool usage (sidebar)", adv: true},
+	{name: "/agents", desc: "show the chat's agent hierarchy tree (sidebar)"},
+	{name: "/info", desc: "show chat info (id, counts) in the sidebar"},
+	{name: "/yolo", desc: "toggle auto-approve for commands (no prompt)"},
+	{name: "/cd", desc: "set the host working dir for commands", arg: true},
+	{name: "/pwd", desc: "show the host working dir for commands"},
+	{name: "/clearagent", desc: "detach the agent (general chat)"},
+	{name: "/help", desc: "show available commands"},
+	{name: "/quit", desc: "exit the CLI"},
 }
 
-// slashMatches returns the commands matching the current input prefix (while the user
-// is still typing the command word, before any space).
-func slashMatches(input string) []slashCmd {
+// slashAlias maps command aliases to their canonical entry in slashCmds.
+var slashAlias = map[string]string{
+	"/stats": "/usage", "/hierarchy": "/agents", "/tree": "/agents", "/?": "/help",
+	"/exit": "/quit",
+}
+
+// lookupSlash resolves a typed command (or alias) to its slashCmd definition.
+func lookupSlash(name string) (slashCmd, bool) {
+	if canon, ok := slashAlias[name]; ok {
+		name = canon
+	}
+	for _, c := range slashCmds {
+		if c.name == name {
+			return c, true
+		}
+	}
+	return slashCmd{}, false
+}
+
+// slashAllowed reports whether the caller may run a command given the active interface
+// mode and org permissions.
+func (m *model) slashAllowed(c slashCmd) bool {
+	if c.adv && m.uiMode == "simple" {
+		return false
+	}
+	if c.perm != "" && !m.can(c.perm) {
+		return false
+	}
+	return true
+}
+
+// slashMatches returns the commands matching the current input prefix, filtered to the
+// ones the caller is allowed to run.
+func (m *model) slashMatches(input string) []slashCmd {
 	input = strings.TrimSpace(input)
 	if !strings.HasPrefix(input, "/") || strings.Contains(input, " ") {
 		return nil
@@ -42,7 +79,7 @@ func slashMatches(input string) []slashCmd {
 	q := strings.ToLower(input)
 	var out []slashCmd
 	for _, c := range slashCmds {
-		if strings.HasPrefix(c.name, q) {
+		if strings.HasPrefix(c.name, q) && m.slashAllowed(c) {
 			out = append(out, c)
 		}
 	}
@@ -55,10 +92,25 @@ func (m *model) runSlash(line string) (tea.Model, tea.Cmd) {
 	cmd := strings.ToLower(fields[0])
 	arg := strings.TrimSpace(strings.TrimPrefix(line, fields[0]))
 
+	if c, ok := lookupSlash(cmd); ok && !m.slashAllowed(c) {
+		m.status = cmd + " is not available with your interface mode or permissions"
+		return m, nil
+	}
+
 	switch cmd {
 	case "/help", "/?":
-		m.status = "/new /agent /model /chain /copy /clearagent /yolo /cd /pwd · ctrl+p pick-msg · ctrl+y copy · pgup/pgdn scroll"
+		names := make([]string, 0, len(slashCmds))
+		for _, c := range slashCmds {
+			if m.slashAllowed(c) {
+				names = append(names, c.name)
+			}
+		}
+		m.status = strings.Join(names, " ") + " · ctrl+p pick-msg · ctrl+y copy · pgup/pgdn scroll"
 		return m, nil
+
+	case "/quit", "/exit":
+		m.cleanup()
+		return m, tea.Quit
 
 	case "/copy":
 		return m, m.copyLastAssistant()
