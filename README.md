@@ -197,4 +197,10 @@ Drop a star — it helps other terminal-dwellers find Nexora. New to the platfor
 
 ## Star history
 
-[![Star History Chart](https://api.star-history.com/chart?repos=ParendumOU/Nexora-CLI&type=date&legend=top-left&sealed_token=kOtrenVdFwCIs0bOd9ml3FZ3HsMolCcQb_9AmVzzEx28ej1V0oS_Zc8w7k4QfHrxBOYF4OZdMAXbRlZ9FR47neuWbnVfYtPYStMKiYD7_XdMBpwL1Vzlp-E3np0SKtO1YT-9jk5r6g9Hahv_Gjvkp9osCvcEc02DXzRzDd6w7qGUwZaxxVSDK_1aasvo)](https://www.star-history.com/?repos=ParendumOU%2FNexora-CLI&type=date&legend=top-left)
+<a href="https://www.star-history.com/?repos=ParendumOU%2FNexora-CLI&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=ParendumOU/Nexora-CLI&type=date&theme=dark&legend=top-left&sealed_token=6P-EGNJypxyjAu5k_8adBY0mITbuf8SHRnrutyrYUiRNnfdsFYgH9W62k8o3MC5xv8h6ykQD36H-vC9JwoUNE8fovq27h62dxyJxWLTJhn14byvxQqxnS4o1jhoiYi1XgEaFfTP6JNZgfEsa9Q7XhT_76k5zPsQwBCiCe8tNgalktHErQiypWONeKxOY" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=ParendumOU/Nexora-CLI&type=date&legend=top-left&sealed_token=6P-EGNJypxyjAu5k_8adBY0mITbuf8SHRnrutyrYUiRNnfdsFYgH9W62k8o3MC5xv8h6ykQD36H-vC9JwoUNE8fovq27h62dxyJxWLTJhn14byvxQqxnS4o1jhoiYi1XgEaFfTP6JNZgfEsa9Q7XhT_76k5zPsQwBCiCe8tNgalktHErQiypWONeKxOY" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=ParendumOU/Nexora-CLI&type=date&legend=top-left&sealed_token=6P-EGNJypxyjAu5k_8adBY0mITbuf8SHRnrutyrYUiRNnfdsFYgH9W62k8o3MC5xv8h6ykQD36H-vC9JwoUNE8fovq27h62dxyJxWLTJhn14byvxQqxnS4o1jhoiYi1XgEaFfTP6JNZgfEsa9Q7XhT_76k5zPsQwBCiCe8tNgalktHErQiypWONeKxOY" />
+ </picture>
+</a>
